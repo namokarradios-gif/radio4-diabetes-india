@@ -1,0 +1,545 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="theme-color" content="#090a0b">
+<title>Radio 4 Diabetes India — 37 Position Tuner</title>
+<style>
+:root{--gold:#d8ad5b;--pale:#f1d99b;--ink:#090a0b}
+*{box-sizing:border-box}
+body{margin:0;min-height:100vh;background:radial-gradient(ellipse at 50% 0,#302719 0,#11110f 38%,#08090a 78%);color:#f4eee1;font-family:Arial,Helvetica,sans-serif}
+.page{width:min(720px,100%);margin:auto;padding:22px 18px 38px}
+header{display:flex;justify-content:space-between;align-items:center;border-bottom:1px solid #ffffff20;padding:5px 0 18px}
+.brand{display:flex;align-items:center;gap:10px;color:var(--pale);font-size:13px;font-weight:bold;letter-spacing:3px}
+.logo{width:38px;height:38px;border:1px solid var(--gold);border-radius:50%;display:grid;place-items:center;letter-spacing:0;box-shadow:0 0 16px #d8ad5b30}
+.live{font-size:9px;letter-spacing:2px;color:#e9c77e}.dot{display:inline-block;width:6px;height:6px;background:#e5b95e;border-radius:50%;box-shadow:0 0 8px #ffcf70;margin-right:6px}
+.intro{text-align:center;padding:30px 0 20px}.eyebrow{font-size:9px;letter-spacing:3px;color:var(--gold)}
+h1{font:normal clamp(32px,7vw,48px) Georgia,serif;margin:12px 0 8px}h1 em{color:var(--pale);font-style:normal}
+.intro p{font-size:13px;line-height:1.6;color:#aaa49a;margin:0 auto;max-width:440px}
+.radio{padding:18px 16px 22px;border:1px solid #b88e45;border-radius:22px;background:linear-gradient(118deg,transparent 0%,#ffffff12 8%,transparent 18%),linear-gradient(145deg,#242428 0%,#050506 24%,#111114 48%,#020203 72%,#17171b 100%);box-shadow:0 25px 65px #000c,inset 0 1px 2px #ffffff55,inset 0 -8px 18px #000,0 0 0 2px #09090a,0 0 12px #d4ad5a33}
+.top{display:flex;justify-content:space-between;color:#e4c27c;font-size:10px;letter-spacing:3px;margin:0 3px 17px}.onair-label{color:#ff4545;text-shadow:0 0 7px #ff252588;font-weight:bold;letter-spacing:2px}.onair-label i{display:inline-block;width:7px;height:7px;border-radius:50%;background:#ff3030;box-shadow:0 0 7px #ff2020,0 0 13px #ff2020;margin-right:6px;vertical-align:1px}
+.dial{--glow:#d8ad5b;--glow-soft:#d8ad5b55;position:relative;width:min(360px,82vw);aspect-ratio:1;margin:auto;padding:20px;border-radius:50%;background:radial-gradient(circle at 50% 50%,#252529 0 69%,#55555b 70%,#d0d0d4 73%,#55555b 76%,#17171a 80%,#080809 100%);box-shadow:0 0 0 2px #050506,0 0 0 5px #77777d,0 0 0 7px #c7a45b,0 0 0 8px #17171a,0 0 0 10px #bfc0c4,0 0 0 11px #d7b96f,0 0 0 12px #29292d,0 0 22px var(--glow-soft),0 14px 28px #000c,inset 0 3px 7px #ffffff55,inset 0 -9px 14px #000;touch-action:none;user-select:none;cursor:grab;transition:box-shadow .45s ease}
+.dial:before{content:"";position:absolute;inset:3px;border-radius:50%;background:conic-gradient(from 0deg,transparent 0deg 352deg,#f4d58c 352deg 356deg,#fff4d4 356deg 358deg,#b78c45 358deg 360deg),repeating-conic-gradient(from 0deg,#f3f3f5 0deg .5deg,#85858b .8deg 1.3deg,#29292e 1.7deg 2.4deg,#bfc0c5 2.8deg 3.2deg);mask:radial-gradient(circle,transparent 0 76%,#000 77% 99%,transparent 100%);filter:drop-shadow(0 1px 3px #000) drop-shadow(0 0 2px #d9d9dd);pointer-events:none;transform:rotate(var(--outer-rim-angle,0deg));transition:transform .32s cubic-bezier(.2,.8,.2,1)}.dial:after{content:"";position:absolute;inset:14px;border-radius:50%;border:2px solid #e0e0e3;box-shadow:0 0 0 2px #17171a,0 0 0 3px #c7a45b,0 0 0 4px #77777d,0 0 10px #ffffff55,0 0 14px var(--glow-soft),inset 0 0 8px #ffffff55;pointer-events:none}.dial:active{cursor:grabbing}
+/* Three-second startup sweep: one full colour rotation, settling on National Radio */
+.startup-spectrum{position:absolute;inset:7%;z-index:1;border-radius:50%;pointer-events:none;
+  background:conic-gradient(from 0deg,#ff3b30,#ff9f0a,#ffe600,#4cd964,#00c7be,#1688ff,#7856ff,#e34bd8,#ff3b30);
+  opacity:.82;filter:blur(1.2px) saturate(1.25);
+  -webkit-mask:radial-gradient(circle,transparent 0 65%,#000 67% 72%,transparent 74%);
+  mask:radial-gradient(circle,transparent 0 65%,#000 67% 72%,transparent 74%);
+  animation:startupColourSweep 3s cubic-bezier(.12,.72,.18,1) forwards}
+@keyframes startupColourSweep{
+  0%{transform:rotate(0deg);opacity:.88}
+  78%{opacity:.78}
+  100%{transform:rotate(360deg);opacity:0}
+}
+.rim-rotor.startup-spin{animation:startupRimSpin 3s cubic-bezier(.12,.72,.18,1) forwards}
+@keyframes startupRimSpin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}
+.dial.startup-animating .dial-touch-area{pointer-events:none}
+
+/* Extend the invisible touch target to the full visible metallic rim. */
+.dial-touch-area{position:absolute;inset:-14px;border-radius:50%;z-index:7;background:transparent;pointer-events:auto;touch-action:none;-webkit-tap-highlight-color:transparent}
+
+.rim-rotor{position:absolute;inset:0;border-radius:50%;z-index:2;pointer-events:none;transform:rotate(0deg);transition:transform .32s cubic-bezier(.2,.8,.2,1)}
+.rim-mark{position:absolute;width:15px;height:15px;border-radius:50%;background:radial-gradient(circle at 35% 30%,#ffffff 0%,#fff9d8 18%,var(--glow) 48%,color-mix(in srgb,var(--glow) 45%,#111) 78%);border:1px solid color-mix(in srgb,var(--glow) 75%,#fff);box-shadow:0 0 6px #fff,0 0 15px var(--glow),0 0 27px var(--glow),0 0 40px var(--glow-soft),inset 0 1px 2px #fff;}
+.mark-top{top:5.2%;left:calc(50% - 4.5px)}.mark-right{right:5.2%;top:calc(50% - 4.5px)}.mark-bottom{bottom:5.2%;left:calc(50% - 4.5px)}.mark-left{left:5.2%;top:calc(50% - 4.5px)}
+.rim-line{position:absolute;width:3px;height:15px;border-radius:3px;background:linear-gradient(90deg,#777,#fff,var(--glow));box-shadow:0 0 5px #fff,0 0 12px var(--glow),0 0 20px var(--glow-soft)}
+.line-top{top:9%;left:calc(50% - 1.5px)}.line-right{right:9%;top:calc(50% - 1.5px);transform:rotate(90deg)}.line-bottom{bottom:9%;left:calc(50% - 1.5px)}.line-left{left:9%;top:calc(50% - 1.5px);transform:rotate(90deg)}
+.glass{height:100%;border-radius:50%;position:relative;overflow:hidden;border:3px solid #15110a;
+background:
+radial-gradient(circle,rgba(225,225,230,.20) 0 1px,transparent 1.45px) 0 0/7px 7px,
+radial-gradient(circle,rgba(0,0,0,.48) 0 .9px,transparent 1.5px) 3.5px 3.5px/7px 7px,
+radial-gradient(ellipse at 48% 38%,color-mix(in srgb,var(--glow) 76%,#3a2a18) 0%,color-mix(in srgb,var(--glow) 48%,#211b12) 34%,#211b12 62%,#090a0b 83%);
+transition:background .35s ease,box-shadow .35s ease;
+box-shadow:inset 0 0 0 2px #e3c77c88,inset 0 0 22px #000,inset 0 -12px 24px #0009,0 0 18px var(--glow-soft)}
+.glass:before{content:"";position:absolute;inset:0;border-radius:50%;background:radial-gradient(ellipse at 34% 17%,#ffffffa8 0%,#ffffff55 8%,#ffffff1b 20%,transparent 42%),linear-gradient(145deg,#ffffff3b 0%,transparent 31%,transparent 67%,#ffffff26 83%,#ffffff58 100%);box-shadow:inset 0 8px 17px #fff3,inset 0 -8px 18px #0008;z-index:5;pointer-events:none}
+.glass:after{content:"";position:absolute;left:7%;top:4%;width:70%;height:34%;border-radius:50%;transform:rotate(-28deg);background:radial-gradient(ellipse at 35% 25%,#ffffff70, #ffffff20 32%,transparent 72%);filter:blur(4px);z-index:6;pointer-events:none}
+.ticks{position:absolute;inset:8%;border-radius:50%;background:repeating-conic-gradient(var(--glow) 0deg 1deg,transparent 1deg 8deg);transition:filter .45s ease;filter:drop-shadow(0 0 5px var(--glow)) saturate(1.3) brightness(1.15);mask:radial-gradient(circle,transparent 0 66%,#000 67% 70%,transparent 71%)}
+.inner{position:absolute;inset:22%;border-radius:50%;border:1px solid #77777b;background:radial-gradient(circle at 35% 25%,color-mix(in srgb,var(--glow) 30%,#343438),#19191c 58%,#080809);box-shadow:inset 0 0 20px #000,0 0 18px var(--glow-soft);transition:background .45s ease,box-shadow .45s ease}
+.dialtitle{position:absolute;top:25%;width:100%;text-align:center;color:#efd69e;letter-spacing:5px;font-size:11px;text-shadow:0 0 9px #ffcf70;z-index:2}
+
+/* Station name inside the dial: matches the blue LED panel typography and colour */
+.dial-station-name{
+  position:absolute;left:50%;top:17%;transform:translateX(-50%);
+  width:76%;z-index:2;text-align:center;
+  color:#c4f0ff;font:bold clamp(8px,1.8vw,11px) "Courier New",monospace;
+  letter-spacing:clamp(.5px,.12vw,1.2px);line-height:1.2;
+  text-shadow:0 0 7px #41bfff,0 0 15px #168bff;
+  overflow-wrap:anywhere;pointer-events:none;
+}
+@media(max-width:480px){.dial-station-name{font-size:clamp(8px,2.2vw,10px);width:78%}}
+
+.dialtitle small{display:block;color:#b99a5c;font-size:8px;letter-spacing:2px;margin-top:8px}
+.mark{position:absolute;color:#f0d18a;font:10px Georgia,serif;z-index:2;text-shadow:0 0 6px #e6b85b}
+.m0{top:10%;left:48%}.m1{top:31%;right:9%}.m2{bottom:17%;right:19%}.m3{bottom:17%;left:19%}.m4{top:31%;left:9%}
+.needle{position:absolute;left:50%;top:14%;height:38%;width:4px;transform:translateX(-50%) rotate(0deg);transform-origin:50% 100%;background:linear-gradient(90deg,#7d1711,#ff5941,#ffd3a0);box-shadow:0 0 9px #ff4b32;z-index:3;pointer-events:none}
+.hub{position:absolute;left:50%;top:51%;transform:translate(-50%,-50%) rotate(0deg);width:66px;height:66px;border-radius:50%;background:repeating-conic-gradient(from 0deg,#bcbcc0 0deg 1deg,#4b4b50 1.5deg 3deg,#8b8b91 3.5deg 5deg),radial-gradient(circle at 35% 28%,#f0f0f2,#77777d 35%,#29292d 70%,#09090a);background-blend-mode:soft-light,normal;border:3px solid #a4a4a9;box-shadow:0 0 0 4px #09090a,0 0 0 6px #55555b,0 0 18px var(--glow),inset 0 0 10px #fff7;z-index:4;pointer-events:none;transition:transform .28s cubic-bezier(.2,.8,.2,1),box-shadow .45s ease}.hub:before{content:"";position:absolute;inset:8px;border-radius:50%;border:1px solid #fff8;box-shadow:inset 0 1px 4px #fff8,0 1px 4px #0008}@keyframes centreGreenBlink{0%,100%{opacity:1;box-shadow:0 0 5px #d8ffe1,0 0 11px #42ff78,0 0 18px #20e85a}50%{opacity:.25;box-shadow:0 0 2px #42ff78}}
+.hub:after{content:"";position:absolute;left:50%;top:50%;width:6px;height:6px;border-radius:50%;background:#8dffab;box-shadow:0 0 5px #d8ffe1,0 0 11px #42ff78,0 0 18px #20e85a;transform:translate(-50%,-50%);animation:centreGreenBlink 1.1s steps(2,end) infinite}
+.display{margin:18px auto 14px;padding:13px;border:1px solid #9b783b66;border-radius:9px;background:linear-gradient(#17150f,#080909);text-align:center;box-shadow:inset 0 0 15px #000}
+.display small{display:block;color:#b99a5c;font-size:9px;letter-spacing:3px}.display strong{display:block;font:22px Georgia;color:#f0d28e;margin-top:5px}.display span{display:block;color:#9b9587;font-size:10px;letter-spacing:2px;margin-top:4px}
+
+.speaker{
+  position:relative;
+  height:clamp(78px,12vw,104px);
+  max-width:520px;
+  margin:18px auto 19px;
+  overflow:hidden;
+  border-radius:12px;
+  border:2px solid #a9a9ad;
+  background:
+    linear-gradient(180deg,#55555a 0%,#17171b 13%,#08080a 50%,#303035 88%,#09090b 100%);
+  box-shadow:
+    0 0 0 2px #09090a,
+    0 0 0 4px #c4a45e,
+    inset 0 2px 5px #ffffff55,
+    inset 0 -7px 12px #000,
+    0 8px 18px #000b;
+}
+.speaker:before{
+  content:"";
+  position:absolute;inset:7px;
+  border-radius:7px;
+  border:1px solid #ffffff35;
+  background:
+    radial-gradient(circle,#d7d7da 0 1.15px,transparent 1.65px) 0 0/7px 7px,
+    radial-gradient(circle,#77777d 0 .8px,transparent 1.35px) 3.5px 3.5px/7px 7px,
+    linear-gradient(110deg,#26262b,#09090b 48%,#29292e);
+  box-shadow:inset 0 2px 12px #000,inset 0 0 5px #ffffff30;
+}
+.speaker-badge{position:absolute;z-index:2;left:50%;top:50%;transform:translate(-50%,-50%);padding:5px 24px;border:1px solid #f2d58b;border-radius:18px;color:#17120a;font:bold 15px Georgia,serif;letter-spacing:2px;white-space:nowrap;background:linear-gradient(180deg,#fff0bd 0%,#d8b15c 35%,#9c702b 58%,#f0d58f 100%);box-shadow:inset 0 1px 3px #fff,inset 0 -2px 4px #5d3d12,0 2px 5px #000b;text-shadow:0 1px 0 #fff4}.speaker:after{
+  content:"";
+  position:absolute;inset:0;
+  pointer-events:none;
+  background:linear-gradient(115deg,#ffffff25,transparent 24%,transparent 72%,#ffffff16);
+}
+@media(max-width:480px){
+  .speaker{height:78px;margin:15px auto 17px}
+  .speaker:before{inset:6px;background-size:6px 6px}
+}
+
+.controls{display:flex;justify-content:center;align-items:center;gap:10px;flex-wrap:wrap}
+button{border-radius:24px;padding:12px 22px;letter-spacing:1px;font-size:10px;cursor:pointer}
+.play{background:linear-gradient(#f0d493,#9a6e2d);border:1px solid #e3c27c;color:#17120a;font-weight:bold}.stop{background:#171511;border:1px solid #77603a;color:#d8bd80}
+.hint{text-align:center;color:#928b7d;font-size:11px;line-height:1.5;margin:15px auto 0;max-width:430px}
+.list{display:flex;justify-content:center;gap:7px;flex-wrap:wrap;margin:17px auto 0}
+.list button{padding:8px 11px;background:#171511;border:1px solid #594727;color:#cbb889;font-size:9px}
+.list button.active{background:#d8ad5b;color:#17120a;border-color:#f0d493}
+.note{text-align:center;color:#80796d;font-size:10px;line-height:1.5;margin:18px auto 0;max-width:480px}
+@media(max-width:480px){.page{padding:16px 13px 28px}.intro{padding:26px 0 17px}.radio{padding:15px 12px 19px}.dial{width:min(340px,84vw)}.display strong{font-size:20px}}
+
+.position{color:#d7b96f!important;font-size:9px!important;letter-spacing:2px!important;margin-top:8px!important}
+.list{max-height:170px;overflow-y:auto;overflow-x:hidden;padding:3px 4px 7px;scrollbar-width:thin;scrollbar-color:#8c6b36 #111}
+.list button{white-space:normal;max-width:100%;line-height:1.25}
+.list button.active{box-shadow:0 0 12px #e8b84f66}
+@media(max-width:480px){.list{max-height:145px}.list button{font-size:8px;padding:8px 9px}}
+
+
+/* Single-screen radio cabinet layout */
+html,body{width:100%;height:100%;min-height:100%;overflow:hidden}
+body{background:radial-gradient(ellipse at 50% 0,#292b31 0,#111216 42%,#050608 100%);overscroll-behavior:none}
+.page{width:min(100%,760px);height:100dvh;min-height:0;margin:0 auto;padding:clamp(8px,1.8vh,16px) clamp(10px,2vw,18px);display:flex;align-items:stretch}
+.radio{width:100%;height:100%;min-height:0;padding:clamp(10px,1.7vh,16px) clamp(10px,2vw,18px);border-radius:clamp(15px,3vw,24px);display:flex;flex-direction:column;justify-content:space-between;overflow:hidden}
+.top{flex:0 0 auto;margin:0 3px clamp(6px,1vh,12px);align-items:center}
+.brand-plate{display:flex;align-items:baseline;gap:8px;color:#e9d19b;font: bold 14px Georgia,serif;letter-spacing:3px;text-shadow:0 0 8px #d9ad5b55}
+.brand-plate small{font:bold 10px Arial,sans-serif;letter-spacing:1.8px;color:#f0d59a;text-shadow:0 0 7px #d9ad5b66}
+.onair-label{font-size:10px}
+.dial{width:min(68vw,48vh,440px);max-width:100%;flex:0 1 auto;aspect-ratio:1;margin:0 auto;padding:20px}
+.led-panel{
+  width:min(100%,500px);height:clamp(76px,11vh,94px);flex:0 0 clamp(76px,11vh,94px);
+  margin:clamp(14px,2.2vh,20px) auto 0;padding:9px 14px 10px;
+  display:flex;flex-direction:column;justify-content:center;
+  border:1px solid #75cfff;border-radius:8px;
+  background:linear-gradient(180deg,#173e60 0%,#071a2e 48%,#06111f 100%);
+  box-shadow:inset 0 1px 8px #8bdcff55,inset 0 -5px 12px #000c,0 0 0 2px #101820,0 0 14px #168bd966;
+  color:#9be4ff;text-align:center;text-shadow:0 0 7px #41bfff,0 0 15px #168bff;
+}
+.led-top{display:flex;justify-content:space-between;color:#67caff;font:8px Arial,sans-serif;letter-spacing:2px;margin-bottom:4px}
+.led-panel strong{display:-webkit-box;-webkit-box-orient:vertical;-webkit-line-clamp:2;overflow:hidden;max-width:100%;font:bold clamp(14px,2.8vw,21px) "Courier New",monospace;letter-spacing:clamp(1px,.22vw,2px);line-height:1.18;color:#c4f0ff;margin:3px auto 0;text-wrap:balance}
+.led-panel>span{display:block;font:9px "Courier New",monospace;letter-spacing:1.5px;color:#79d5ff;margin-top:4px}
+.speaker{flex:0 0 clamp(62px,9vh,88px);width:min(100%,540px);margin:clamp(7px,1.2vh,12px) auto}
+.hardware-controls{display:flex;align-items:center;justify-content:center;gap:clamp(12px,3vw,24px);margin:clamp(5px,1vh,10px) auto 0}
+.knob-button,.transport{
+  display:grid;place-items:center;padding:0;border-radius:50%;color:#e7d3a5;
+  background:radial-gradient(circle at 35% 25%,#77777d,#25252a 48%,#08080a 78%);
+  border:2px solid #b5b5ba;box-shadow:0 0 0 3px #111,0 0 0 4px #c3a15b,inset 0 2px 5px #fff5,inset 0 -5px 8px #000,0 5px 12px #000b;
+  font-size:20px;line-height:1;cursor:pointer;touch-action:manipulation
+}
+.knob-button{width:clamp(42px,7vh,54px);height:clamp(42px,7vh,54px);font-size:24px}
+.transport{width:clamp(48px,8vh,62px);height:clamp(48px,8vh,62px);font-size:17px}
+.transport.play{color:#16100a;background:radial-gradient(circle at 35% 25%,#ffe6a4,#bd8a3c 55%,#50330e)}
+.transport.stop{color:#ff7770}
+
+.state-selector-wrap label{display:block;color:#c6a76a;font-size:8px;letter-spacing:3px;margin-bottom:5px}
+
+
+
+@media(max-height:700px){
+ .dial{width:min(62vw,43vh,390px);padding:16px}
+ .speaker{flex-basis:clamp(48px,7vh,66px)}
+ .led-panel{height:clamp(72px,11vh,84px);flex-basis:clamp(72px,11vh,84px);padding:6px 12px}
+ 
+}
+@media(max-width:480px){
+ .page{padding:7px 7px}
+ .radio{padding:10px 9px;border-radius:16px}
+ .dial{width:min(82vw,43vh,390px);padding:16px}
+ .speaker{width:96%;flex-basis:clamp(54px,8vh,72px)}
+ .led-panel{height:clamp(76px,11vh,92px);flex-basis:clamp(76px,11vh,92px);padding:8px 10px}
+ .led-panel strong{font-size:clamp(15px,4.2vw,19px)}
+}
+@media(max-height:620px) and (orientation:landscape){
+ .dial{width:min(42vw,66vh,330px);padding:13px}
+ .speaker{flex-basis:42px;margin:4px auto}
+ .top{margin-bottom:3px}
+ .led-panel{height:68px;flex-basis:68px;margin-top:4px;padding:4px 9px}
+ .hardware-controls{margin-top:3px}
+ .knob-button{width:38px;height:38px}
+ .transport{width:42px;height:42px}
+ 
+ 
+}
+
+
+.ondemand-panel{
+  width:min(58%,290px);min-height:clamp(36px,5.2vh,46px);
+  margin:clamp(5px,.8vh,9px) auto 0;padding:6px 16px;
+  display:flex;align-items:center;justify-content:center;gap:9px;
+  position:relative;cursor:pointer;touch-action:manipulation;
+  border:1px solid #d9f2df;border-radius:22px;
+  color:#164d2a;
+  background:linear-gradient(180deg,#f4fff7dd 0%,#ccebd5e8 28%,#a6dcb8e8 62%,#eaffefdd 100%);
+  backdrop-filter:blur(8px);-webkit-backdrop-filter:blur(8px);
+  box-shadow:inset 0 1px 5px #ffffff,inset 0 -3px 8px #5caa7188,
+    0 0 0 2px #111713,0 0 12px #7be69a66,0 3px 8px #000a;
+  text-shadow:0 1px 0 #ffffffaa;
+}
+.ondemand-label{font:bold clamp(10px,2.1vw,12px) Arial,sans-serif;letter-spacing:clamp(1px,.3vw,2px);white-space:nowrap}
+.ondemand-indicator{width:7px;height:7px;flex:0 0 7px;border-radius:50%;background:#32b95e;box-shadow:0 0 4px #eaffef,0 0 9px #39d86a}
+.ondemand-arrow{position:absolute;right:11px;font:20px Arial,sans-serif;color:#176b35;line-height:1}
+.ondemand-panel:active{filter:brightness(1.15);transform:translateY(1px)}
+@media(max-height:620px) and (orientation:landscape){.ondemand-panel{min-height:30px;padding:4px 12px;margin-top:3px}.ondemand-label{font-size:9px}}
+
+
+/* Clearly visible mounting screws for the RADIO 4 speaker nameplate */
+.speaker-badge{
+  position:absolute!important;left:50%!important;top:50%!important;
+  transform:translate(-50%,-50%)!important;
+  width:min(190px,62%)!important;min-height:28px!important;padding:3px 25px!important;
+  display:flex!important;align-items:center!important;justify-content:center!important;
+  border:1px solid #f8e5b3!important;border-radius:4px!important;
+  background:linear-gradient(180deg,#fff4ce 0%,#e4c477 22%,#a8752e 52%,#e5c77e 78%,#fff0bd 100%)!important;
+  box-shadow:inset 0 1px 3px #fff,inset 0 -2px 4px #654515,0 2px 5px #000b,0 0 0 1px #5a411e!important;
+  overflow:visible!important;z-index:8!important;
+}
+.badge-wordmark{
+  font:bold 13px Georgia,serif!important;letter-spacing:1.7px!important;
+  color:#77501d!important;
+  text-shadow:1px 1px 0 #fff1c8,-1px -1px 0 #6a471b,0 2px 2px #fff5!important;
+  filter:drop-shadow(0 1px 0 #fff4)!important;
+}
+.badge-screw{
+  display:block!important;position:absolute!important;top:50%!important;
+  width:9px!important;height:9px!important;min-width:9px!important;
+  transform:translateY(-50%)!important;border-radius:50%!important;
+  background:radial-gradient(circle at 30% 25%,#fff 0%,#e8ebef 17%,#aab0b8 42%,#555d67 68%,#252a31 84%,#e4e7eb 100%)!important;
+  border:1px solid #454b53!important;
+  box-shadow:inset 0 1px 2px #fff,0 1px 3px #000c,0 0 2px #fff9!important;
+  z-index:10!important;
+}
+.badge-screw.left{left:7px!important;right:auto!important}
+.badge-screw.right{right:7px!important;left:auto!important}
+.badge-screw:after{
+  content:""!important;position:absolute!important;left:1px!important;right:1px!important;
+  top:3px!important;height:1px!important;background:#333941!important;
+  transform:rotate(-35deg)!important;box-shadow:0 0 1px #fff!important;
+}
+
+
+/* Marshall-inspired branding: wordmark mounted directly on the speaker grille */
+.speaker-badge{display:none!important}
+.speaker-wordmark{
+  position:absolute!important;z-index:4!important;
+  left:50%!important;top:50%!important;
+  transform:translate(-50%,-50%)!important;
+  width:max-content!important;max-width:90%!important;
+  padding:0!important;margin:0!important;
+  border:0!important;border-radius:0!important;
+  background:transparent!important;box-shadow:none!important;
+  color:#d9b36b!important;
+  font-family:Georgia,'Times New Roman',serif!important;
+  font-size:clamp(22px,4.5vw,31px)!important;
+  font-style:italic!important;font-weight:700!important;
+  letter-spacing:1px!important;white-space:nowrap!important;
+  text-shadow:
+    0 1px 0 #fff0c2,
+    0 2px 0 #9a7136,
+    0 3px 2px #000,
+    0 0 7px #e4c47a55!important;
+  filter:drop-shadow(0 1px 1px #000)!important;
+}
+
+/* Slightly larger Medical Experts label; button dimensions remain unchanged */
+.ondemand-label{
+  font-size:clamp(12px,2.5vw,14px)!important;
+}
+
+/* Remove Android/mobile blue tap-highlight square from interactive controls */
+button, .ondemand-panel, .knob-button, .transport-button, [role="button"]{
+  -webkit-tap-highlight-color:transparent!important;
+  tap-highlight-color:transparent!important;
+}
+button:focus, button:active, .ondemand-panel:focus, .ondemand-panel:active,
+[role="button"]:focus, [role="button"]:active{
+  -webkit-tap-highlight-color:transparent!important;
+}
+button:focus:not(:focus-visible), .ondemand-panel:focus:not(:focus-visible),
+[role="button"]:focus:not(:focus-visible){
+  outline:none!important;
+  box-shadow:inherit;
+}
+
+/* Unified Radio 4 Diabetes India wordmark: equal emphasis, one continuous script style */
+.top{display:flex!important;justify-content:space-between!important;gap:8px!important}
+.brand-plate{
+  display:block!important;flex:1 1 auto!important;min-width:0!important;
+  color:#d9b36b!important;
+  font-family:"URW Chancery L","Brush Script MT","Segoe Script",cursive!important;
+  font-size:clamp(19px,4.2vw,29px)!important;
+  font-style:italic!important;font-weight:700!important;
+  letter-spacing:0!important;line-height:1.08!important;
+  white-space:nowrap!important;
+  text-shadow:0 1px 0 #fff0c2,0 2px 0 #9a7136,0 3px 2px #000,0 0 7px #e4c47a55!important;
+}
+.brand-plate small{display:none!important}
+@media(max-width:390px){
+  .brand-plate{font-size:clamp(17px,4.4vw,20px)!important;letter-spacing:-.5px!important}
+}
+
+/* Simple, highly readable unified brand lettering */
+.brand-plate{
+  display:block!important;flex:1 1 auto!important;min-width:0!important;
+  color:#f0d59a!important;
+  font-family:Arial,Helvetica,sans-serif!important;
+  font-size:clamp(15px,3.1vw,21px)!important;
+  font-style:normal!important;font-weight:800!important;
+  letter-spacing:.35px!important;line-height:1.1!important;
+  white-space:nowrap!important;
+  text-shadow:0 1px 2px #000,0 0 5px #d9ad5b44!important;
+}
+.brand-plate small{display:none!important}
+@media(max-width:390px){
+  .brand-plate{font-size:clamp(13px,3.45vw,16px)!important;letter-spacing:0!important}
+}
+
+/* Compact LIVE ONAIR status panel */
+.onair-label{
+  display:inline-flex!important;align-items:center!important;justify-content:center!important;
+  gap:7px!important;flex:0 0 auto!important;
+  padding:6px 10px!important;
+  border:1px solid #a83232!important;border-radius:5px!important;
+  background:linear-gradient(180deg,#2a1011 0%,#100708 100%)!important;
+  color:#ffdddd!important;
+  font-family:Arial,Helvetica,sans-serif!important;
+  font-size:10px!important;font-weight:800!important;
+  letter-spacing:1.2px!important;white-space:nowrap!important;
+  box-shadow:inset 0 1px 3px #ffffff16,0 0 8px #d3262633!important;
+}
+.onair-label i{
+  display:inline-block!important;width:7px!important;height:7px!important;flex:0 0 7px!important;
+  border-radius:50%!important;background:#ff3030!important;
+  box-shadow:0 0 5px #ff3030,0 0 10px #ff3030aa!important;
+}
+
+/* Header correction: station label matches the lower LED panel font and colour */
+.top{align-items:center;gap:8px}
+.brand-stack{display:flex;flex-direction:column;align-items:flex-start;gap:3px;min-width:0}
+.live-radio-tag{display:block;font:800 11px Arial,Helvetica,sans-serif;letter-spacing:1.4px;color:#ffdddd;text-shadow:0 0 6px #ff303088;white-space:nowrap}
+.live-radio-tag i{display:inline-block;width:6px;height:6px;border-radius:50%;background:#ff3030;box-shadow:0 0 5px #ff3030,0 0 9px #ff3030aa;margin-right:4px;vertical-align:1px}
+#topStationName{
+  display:block;flex:0 1 auto;min-width:0;max-width:46%;
+  font-family:"Courier New",monospace;font-weight:bold;
+  font-size:14px;letter-spacing:1px;
+  line-height:1.2;color:#c4f0ff;text-shadow:0 0 7px #41bfff,0 0 12px #168bff;
+  white-space:nowrap;overflow:hidden;text-overflow:ellipsis;text-align:right;
+  padding:0;border:0;background:transparent;box-shadow:none;
+}
+@media(max-width:390px){
+  #topStationName{font-size:14px;letter-spacing:.5px;max-width:43%}
+  .live-radio-tag{font-size:10px;letter-spacing:1px}
+  .brand-plate{font-size:clamp(12px,3.2vw,15px)!important}
+}
+
+/* Scrolling station-name marquee above the dial */
+.station-marquee{
+  display:block;flex:0 1 46%;min-width:0;max-width:46%;
+  overflow:hidden;white-space:nowrap;text-align:left;
+  -webkit-mask-image:linear-gradient(90deg,transparent 0,#000 5%,#000 95%,transparent 100%);
+  mask-image:linear-gradient(90deg,transparent 0,#000 5%,#000 95%,transparent 100%);
+}
+#topStationName{
+  display:inline-block;width:max-content;max-width:none;
+  font-family:"Courier New",monospace;font-weight:bold;
+  font-size:14px;letter-spacing:1px;line-height:1.2;
+  color:#c4f0ff;text-shadow:0 0 7px #41bfff,0 0 12px #168bff;
+  white-space:nowrap;overflow:visible;text-overflow:clip;
+  animation:stationMarquee 12s linear infinite;
+}
+@keyframes stationMarquee{
+  0%,8%{transform:translateX(100%)}
+  92%,100%{transform:translateX(-100%)}
+}
+@media(max-width:390px){
+  .station-marquee{flex-basis:46%;max-width:46%}
+  #topStationName{font-size:14px;letter-spacing:.5px}
+}
+@media(prefers-reduced-motion:reduce){
+  #topStationName{animation:none;transform:none}
+}
+
+
+/* Static Apple Music status line beside the red indicator */
+.live-radio-tag{
+  display:flex;align-items:center;gap:5px;
+  width:auto;max-width:100%;overflow:visible;white-space:nowrap;
+  font:700 9px Arial,Helvetica,sans-serif!important;
+  letter-spacing:.25px!important;color:#ffffff!important;
+  text-shadow:0 1px 2px #000!important;
+}
+.live-radio-tag i{
+  display:inline-block;flex:0 0 6px;width:6px;height:6px;
+  border-radius:50%;background:#ff3030;
+  box-shadow:0 0 5px #ff3030,0 0 9px #ff3030aa;
+}
+.live-radio-marquee{display:inline;min-width:0;animation:none!important;transform:none!important}
+@media(max-width:390px){
+  .live-radio-tag{font-size:8px!important;letter-spacing:0!important;gap:4px}
+}
+</style>
+</head>
+<body>
+<div class="page">
+
+<section class="radio">
+<div class="top"><span class="brand-stack"><span class="brand-plate">Radio 4 Diabetes India</span><small class="live-radio-tag"><i></i><span class="live-radio-marquee">Live On Apple Music Radio Station</span></small></span><span class="station-marquee"><span id="topStationName">NATIONAL RADIO</span></span></div>
+<div class="dial" id="dial" aria-label="Drag or rotate the tuner dial">
+<div class="dial-touch-area" aria-hidden="true"></div>
+<div class="startup-spectrum" aria-hidden="true"></div>
+<div class="rim-rotor" id="rimRotor" aria-hidden="true">
+<span class="rim-mark mark-top"></span><span class="rim-mark mark-right"></span>
+<span class="rim-mark mark-bottom"></span><span class="rim-mark mark-left"></span>
+<span class="rim-line line-top"></span><span class="rim-line line-right"></span>
+<span class="rim-line line-bottom"></span><span class="rim-line line-left"></span>
+</div>
+<div class="glass"><div class="ticks"></div><div class="inner"></div>
+<div class="needle" id="needle"></div><div class="hub" id="hub"></div></div></div>
+<div class="led-panel"><div class="led-top"><span>RADIO 4 • DIGITAL TUNER</span><span id="position">01 / 37</span></div><strong id="station">NATIONAL RADIO</strong><span id="region">RADIO 4 DIABETES INDIA</span></div>
+<div class="speaker"><div class="speaker-wordmark">RADIO 4</div></div>
+<div class="hardware-controls"><button class="knob-button" id="prev" aria-label="Previous station">−</button><button class="transport play" id="play" aria-label="Play">▶</button><button class="transport stop" id="stop" aria-label="Stop">■</button><button class="knob-button" id="next" aria-label="Next station">+</button></div>
+<div class="ondemand-panel" id="ondemand" role="button" tabindex="0" aria-label="Open On Demand Radio">
+  <span class="ondemand-indicator"></span>
+  <span class="ondemand-label">MEDICAL EXPERTS</span>
+  <span class="ondemand-arrow">›</span>
+</div>
+
+</section>
+
+</div>
+<script>
+const stations=[
+ {name:"NATIONAL RADIO",region:"RADIO 4 DIABETES INDIA",color:"#F2B84B"},
+ {name:"ANDHRA PRADESH",region:"STATE STATION \u00b7 INDIA",color:"#29A9F5"},
+ {name:"ARUNACHAL PRADESH",region:"STATE STATION \u00b7 INDIA",color:"#83C95B"},
+ {name:"ASSAM",region:"STATE STATION \u00b7 INDIA",color:"#E56CC8"},
+ {name:"BIHAR",region:"STATE STATION \u00b7 INDIA",color:"#F06B4F"},
+ {name:"CHHATTISGARH",region:"STATE STATION \u00b7 INDIA",color:"#43C9A8"},
+ {name:"GOA",region:"STATE STATION \u00b7 INDIA",color:"#758BFF"},
+ {name:"GUJARAT",region:"STATE STATION \u00b7 INDIA",color:"#FF5147"},
+ {name:"HARYANA",region:"STATE STATION \u00b7 INDIA",color:"#D8B43E"},
+ {name:"HIMACHAL PRADESH",region:"STATE STATION \u00b7 INDIA",color:"#55BCE8"},
+ {name:"JHARKHAND",region:"STATE STATION \u00b7 INDIA",color:"#A8CE4F"},
+ {name:"KARNATAKA",region:"STATE STATION \u00b7 INDIA",color:"#31D47A"},
+ {name:"KERALA",region:"STATE STATION \u00b7 INDIA",color:"#38C9C1"},
+ {name:"MADHYA PRADESH",region:"STATE STATION \u00b7 INDIA",color:"#E58A42"},
+ {name:"MAHARASHTRA",region:"STATE STATION \u00b7 INDIA",color:"#258FFF"},
+ {name:"MANIPUR",region:"STATE STATION \u00b7 INDIA",color:"#B17BEF"},
+ {name:"MEGHALAYA",region:"STATE STATION \u00b7 INDIA",color:"#54B99B"},
+ {name:"MIZORAM",region:"STATE STATION \u00b7 INDIA",color:"#ED789B"},
+ {name:"NAGALAND",region:"STATE STATION \u00b7 INDIA",color:"#C6A04C"},
+ {name:"ODISHA",region:"STATE STATION \u00b7 INDIA",color:"#6D9FF2"},
+ {name:"PUNJAB",region:"STATE STATION \u00b7 INDIA",color:"#E2C83E"},
+ {name:"RAJASTHAN",region:"STATE STATION \u00b7 INDIA",color:"#F08A3C"},
+ {name:"SIKKIM",region:"STATE STATION \u00b7 INDIA",color:"#7BCBA6"},
+ {name:"TAMIL NADU",region:"STATE STATION \u00b7 INDIA",color:"#E978B9"},
+ {name:"TELANGANA",region:"STATE STATION \u00b7 INDIA",color:"#A17AE8"},
+ {name:"TRIPURA",region:"STATE STATION \u00b7 INDIA",color:"#54B9E4"},
+ {name:"UTTAR PRADESH",region:"STATE STATION \u00b7 INDIA",color:"#D77A4E"},
+ {name:"UTTARAKHAND",region:"STATE STATION \u00b7 INDIA",color:"#69C58B"},
+ {name:"WEST BENGAL",region:"STATE STATION \u00b7 INDIA",color:"#648DE0"},
+ {name:"ANDAMAN & NICOBAR ISLANDS",region:"UNION TERRITORY \u00b7 INDIA",color:"#45C5D0"},
+ {name:"CHANDIGARH",region:"UNION TERRITORY \u00b7 INDIA",color:"#C58CE8"},
+ {name:"DADRA & NAGAR HAVELI AND DAMAN & DIU",region:"UNION TERRITORY \u00b7 INDIA",color:"#D5AE45"},
+ {name:"DELHI (NCT)",region:"UNION TERRITORY \u00b7 INDIA",color:"#70B5E8"},
+ {name:"JAMMU & KASHMIR",region:"UNION TERRITORY \u00b7 INDIA",color:"#C58A63"},
+ {name:"LADAKH",region:"UNION TERRITORY \u00b7 INDIA",color:"#50CDB0"},
+ {name:"LAKSHADWEEP",region:"UNION TERRITORY \u00b7 INDIA",color:"#E276A0"},
+ {name:"PUDUCHERRY",region:"UNION TERRITORY \u00b7 INDIA",color:"#dc789b"}
+];
+let selected=0,dragging=false,lastAngle=0,rotation=0;
+const dial=document.getElementById('dial'),needle=document.getElementById('needle'),hub=document.getElementById('hub'),rimRotor=document.getElementById('rimRotor'),station=document.getElementById('station'),region=document.getElementById('region'),status={set textContent(v){}};
+const displayNames={
+  "DADRA & NAGAR HAVELI AND DAMAN & DIU":"DADRA-HAVELI • DAMAN-DIU",
+  "ANDAMAN & NICOBAR ISLANDS":"ANDAMAN & NICOBAR",
+  "ARUNACHAL PRADESH":"ARUNACHAL PRADESH",
+  "HIMACHAL PRADESH":"HIMACHAL PRADESH",
+  "MADHYA PRADESH":"MADHYA PRADESH",
+  "UTTAR PRADESH":"UTTAR PRADESH",
+  "UTTARAKHAND":"UTTARAKHAND",
+  "JAMMU & KASHMIR":"JAMMU & KASHMIR"
+};
+function render(){station.textContent=displayNames[stations[selected].name]||stations[selected].name;document.getElementById('topStationName').textContent=displayNames[stations[selected].name]||stations[selected].name;const marqueeName=document.getElementById('topStationName');marqueeName.style.animation='none';void marqueeName.offsetWidth;marqueeName.style.animation='';region.textContent=stations[selected].region;dial.style.setProperty('--glow',stations[selected].color);dial.style.setProperty('--glow-soft',stations[selected].color+'99');const step=360/stations.length;const angle=selected*step;needle.style.transform=`translateX(-50%) rotate(${angle}deg)`;hub.style.transform=`translate(-50%,-50%) rotate(${angle}deg)`;rimRotor.style.transform=`rotate(${angle}deg)`;dial.style.setProperty('--outer-rim-angle',`${angle}deg`);document.getElementById('position').textContent=`${String(selected+1).padStart(2,'0')} / ${stations.length}`;}
+
+/* Soft analogue-radio tuning hiss for every station change */
+let hissAudioContext=null;
+function playTuningHiss(){
+  try{
+    const AudioCtx=window.AudioContext||window.webkitAudioContext;
+    if(!AudioCtx)return;
+    if(!hissAudioContext)hissAudioContext=new AudioCtx();
+    if(hissAudioContext.state==='suspended')hissAudioContext.resume();
+    const ctx=hissAudioContext;
+    const length=Math.floor(ctx.sampleRate*.22);
+    const buffer=ctx.createBuffer(1,length,ctx.sampleRate);
+    const data=buffer.getChannelData(0);
+    for(let i=0;i<length;i++)data[i]=Math.random()*2-1;
+    const source=ctx.createBufferSource();source.buffer=buffer;
+    const filter=ctx.createBiquadFilter();filter.type='bandpass';filter.frequency.value=2100;filter.Q.value=.65;
+    const gain=ctx.createGain();const now=ctx.currentTime;
+    gain.gain.setValueAtTime(.0001,now);
+    gain.gain.exponentialRampToValueAtTime(.055,now+.025);
+    gain.gain.exponentialRampToValueAtTime(.0001,now+.22);
+    source.connect(filter);filter.connect(gain);gain.connect(ctx.destination);
+    source.start(now);source.stop(now+.23);
+  }catch(e){}
+}
+
+function angle(e){const r=dial.getBoundingClientRect(),x=r.left+r.width/2,y=r.top+r.height/2;return Math.atan2(e.clientY-y,e.clientX-x)*180/Math.PI}
+dial.addEventListener('pointerdown',e=>{dragging=true;lastAngle=angle(e);dial.setPointerCapture(e.pointerId)});
+dial.addEventListener('pointermove',e=>{if(!dragging)return;let a=angle(e),d=a-lastAngle;if(d>180)d-=360;if(d< -180)d+=360;rotation+=d;lastAngle=a;let step=Math.round(rotation/(360/stations.length));const previousSelection=selected;selected=((step%stations.length)+stations.length)%stations.length;render();if(selected!==previousSelection)playTuningHiss()});
+function end(){if(!dragging)return;dragging=false;rotation=selected*(360/stations.length);status.textContent='Tuned to '+stations[selected].name+'. Audio stream is not connected in this demo.'}
+dial.addEventListener('pointerup',end);dial.addEventListener('pointercancel',end);
+document.getElementById('prev').onclick=()=>{selected=(selected+stations.length-1)%stations.length;rotation=selected*(360/stations.length);render();playTuningHiss();status.textContent='TUNED · '+stations[selected].name};document.getElementById('next').onclick=()=>{selected=(selected+1)%stations.length;rotation=selected*(360/stations.length);render();playTuningHiss();status.textContent='TUNED · '+stations[selected].name};document.getElementById('play').onclick=()=>{status.textContent='STREAM URL REQUIRED · '+stations[selected].name};
+document.getElementById('stop').onclick=()=>{status.textContent='PLAYBACK STOPPED'};
+document.getElementById('ondemand').addEventListener('click',()=>{status.textContent='MEDICAL EXPERTS PAGE TO BE CONNECTED'});
+document.getElementById('ondemand').addEventListener('keydown',e=>{if(e.key==='Enter'||e.key===' '){e.preventDefault();status.textContent='MEDICAL EXPERTS PAGE TO BE CONNECTED'}});
+render();
+
+// Run the three-second colour sweep once on page load; station remains National Radio.
+dial.classList.add('startup-animating');
+rimRotor.classList.add('startup-spin');
+window.setTimeout(()=>{
+  dial.classList.remove('startup-animating');
+  rimRotor.classList.remove('startup-spin');
+  rimRotor.style.transform='rotate(0deg)';
+},3000);
+</script>
+</body></html>
