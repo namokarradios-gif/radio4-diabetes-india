@@ -538,6 +538,114 @@ button:focus:not(:focus-visible), .ondemand-panel:focus:not(:focus-visible),
   }
 }
 
+
+/* Compact CentovaCast Now Playing line inside the blue LED panel */
+.now-playing{
+  display:flex;align-items:center;justify-content:center;gap:7px;
+  max-width:100%;min-width:0;margin-top:5px;overflow:hidden;
+  font:9px "Courier New",monospace;letter-spacing:.7px;
+  color:#c4f0ff;text-shadow:0 0 6px #41bfff,0 0 12px #168bff;
+}
+.now-playing-label{
+  flex:0 0 auto;color:#67caff;font:700 8px Arial,sans-serif;
+  letter-spacing:1px;
+}
+.now-playing .cc_streaminfo{
+  display:block;min-width:0;overflow:hidden;text-overflow:ellipsis;
+  white-space:nowrap;font:700 9px "Courier New",monospace;
+  color:#e0f7ff;
+}
+@media(max-width:480px){
+  .now-playing{margin-top:3px;gap:5px;font-size:8px}
+  .now-playing-label{font-size:7px;letter-spacing:.7px}
+  .now-playing .cc_streaminfo{font-size:8px}
+}
+
+
+/* Hide live metadata until playback is started */
+.now-playing{display:none!important}
+.now-playing.is-visible{display:flex!important}
+
+
+/* In playback mode, make the blue panel a large, clean stream-information display. */
+.led-panel.is-playing #station,
+.led-panel.is-playing #region{display:none!important}
+.led-panel.is-playing{
+  justify-content:center!important;
+  gap:0!important;
+}
+.led-panel.is-playing .now-playing{
+  display:flex!important;flex-direction:column;align-items:center;justify-content:center;
+  gap:8px;width:100%;margin:0 auto!important;overflow:hidden;
+}
+.led-panel.is-playing .now-playing-label{
+  font:700 10px Arial,sans-serif!important;letter-spacing:2.5px!important;
+  color:#67caff!important;
+}
+.led-panel.is-playing .now-playing .cc_streaminfo{
+  width:100%;max-width:100%;white-space:normal!important;overflow:visible!important;
+  text-overflow:clip!important;text-align:center;
+  font:bold clamp(19px,4.5vw,29px) "Courier New",monospace!important;
+  line-height:1.2!important;letter-spacing:1px!important;
+  color:#e5f8ff!important;
+  text-shadow:0 0 8px #41bfff,0 0 18px #168bff!important;
+  overflow-wrap:anywhere;
+}
+@media(max-width:480px){
+  .led-panel.is-playing .now-playing-label{font-size:9px!important}
+  .led-panel.is-playing .now-playing .cc_streaminfo{
+    font-size:clamp(17px,5vw,23px)!important;line-height:1.15!important;
+  }
+}
+
+
+/* Fit live stream metadata neatly inside the LED panel */
+.led-panel.is-playing .now-playing{
+  width:100%!important;max-width:100%!important;
+  padding:0 5px!important;box-sizing:border-box!important;
+}
+.led-panel.is-playing .now-playing .cc_streaminfo{
+  display:block!important;width:100%!important;max-width:100%!important;
+  box-sizing:border-box!important;padding:0 4px!important;
+  white-space:normal!important;overflow-wrap:anywhere!important;
+  word-break:normal!important;text-align:center!important;
+  font-size:clamp(13px,2.6vw,18px)!important;
+  line-height:1.2!important;letter-spacing:.45px!important;
+}
+@media(max-width:480px){
+  .led-panel.is-playing .now-playing .cc_streaminfo{
+    font-size:clamp(12px,3.4vw,16px)!important;
+    line-height:1.18!important;letter-spacing:.25px!important;
+  }
+}
+
+
+/* Playback layout: retain panel header and position; replace station/region with stream title. */
+.led-panel.is-playing .led-top{display:flex!important}
+.led-panel.is-playing #station,
+.led-panel.is-playing #region{display:none!important}
+.led-panel.is-playing .now-playing{
+  flex:1 1 auto!important;min-height:0!important;
+  display:flex!important;flex-direction:column!important;
+  align-items:center!important;justify-content:center!important;
+  width:100%!important;max-width:100%!important;
+  margin:0 auto!important;padding:0 5px!important;gap:5px!important;
+}
+.led-panel.is-playing .now-playing .cc_streaminfo{
+  display:block!important;width:100%!important;max-width:100%!important;
+  box-sizing:border-box!important;padding:0 4px!important;
+  white-space:normal!important;overflow-wrap:anywhere!important;
+  word-break:normal!important;text-align:center!important;
+  font-size:clamp(9px,1.82vw,12.6px)!important;
+  line-height:1.2!important;letter-spacing:.3px!important;
+}
+@media(max-width:480px){
+  .led-panel.is-playing .now-playing .cc_streaminfo{
+    font-size:clamp(8.4px,2.38vw,11.2px)!important;
+    line-height:1.18!important;letter-spacing:.2px!important;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -556,7 +664,7 @@ button:focus:not(:focus-visible), .ondemand-panel:focus:not(:focus-visible),
 </div>
 <div class="glass"><div class="ticks"></div><div class="inner"></div>
 <div class="needle" id="needle"></div><div class="hub" id="hub"></div></div></div>
-<div class="led-panel"><div class="led-top"><span>RADIO 4 • DIGITAL TUNER</span><span id="position">01 / 37</span></div><strong id="station">NATIONAL RADIO</strong><span id="region">RADIO 4 DIABETES INDIA</span></div>
+<div class="led-panel"><div class="led-top"><span>RADIO 4 • DIGITAL TUNER</span><span id="position">01 / 37</span></div><strong id="station">NATIONAL RADIO</strong><span id="region">RADIO 4 DIABETES INDIA</span><div class="now-playing"><span class="now-playing-label">NOW PLAYING</span><span class="cc_streaminfo" data-type="song" data-username="radio4esi">Loading ...</span></div></div>
 <div class="speaker"><div class="speaker-wordmark">RADIO 4</div></div>
 <div class="hardware-controls">
   <div class="control-item"><button class="transport play" id="play" aria-label="Play radio">▶</button><span class="control-caption" id="playCaption">PLAY</span></div>
@@ -583,7 +691,27 @@ button:focus:not(:focus-visible), .ondemand-panel:focus:not(:focus-visible),
 <script>
 const STREAM_URL="https://cast4.my-control-panel.com/proxy/radio4esi/live";
 const radioStream=document.getElementById("radioStream");
+radioStream.addEventListener("playing",()=>setNowPlayingVisible(true));
+radioStream.addEventListener("pause",()=>setNowPlayingVisible(false));
+radioStream.addEventListener("ended",()=>setNowPlayingVisible(false));
+
 const playButton=document.getElementById("play");
+const nowPlayingPanel=document.querySelector(".now-playing");
+function setNowPlayingVisible(visible){
+  if(nowPlayingPanel) nowPlayingPanel.classList.toggle("is-visible",!!visible);
+  const ledPanel=document.querySelector(".led-panel");
+  if(ledPanel) ledPanel.classList.toggle("is-playing",!!visible);
+}
+setNowPlayingVisible(false);
+playButton.addEventListener("click",()=>{
+  // Let the existing PLAY/STOP handler run; reflect its resulting state.
+  setTimeout(()=>{
+    const playing=playButton.classList.contains("playing") ||
+      playButton.getAttribute("aria-label")==="Stop radio";
+    setNowPlayingVisible(playing);
+  },0);
+});
+
 const stations=[
  {name:"NATIONAL RADIO",region:"RADIO 4 DIABETES INDIA",color:"#F2B84B",streamUrl:STREAM_URL},
  {name:"ANDHRA PRADESH",region:"STATE STATION \u00b7 INDIA",color:"#29A9F5",streamUrl:STREAM_URL},
@@ -747,5 +875,6 @@ window.setTimeout(()=>{
   rimRotor.style.transform='rotate(0deg)';
 },3000);
 </script>
+<script src="https://cast4.asurahosting.com/system/streaminfo.js"></script>
 </body>
 </html>
