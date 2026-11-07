@@ -525,6 +525,19 @@ button:focus:not(:focus-visible), .ondemand-panel:focus:not(:focus-visible),
 .dial:after{
   box-shadow:0 0 0 2px #17171a,0 0 0 3px #c7a45b,0 0 0 4px #77777d,0 0 6px rgba(76,202,255,.04),0 0 12px rgba(76,202,255,.02),0 0 10px #ffffff55,0 0 14px var(--glow-soft),inset 0 0 8px #ffffff55!important;
 }
+
+/* iPhone/Safari correction: force the dial's outer box to remain a true square.
+   Width and height use the same responsive value; all dial artwork is preserved. */
+@media (max-width: 600px) {
+  .dial {
+    width: min(82vw, 43vh, 390px) !important;
+    height: min(82vw, 43vh, 390px) !important;
+    aspect-ratio: 1 / 1 !important;
+    flex: 0 0 auto !important;
+    align-self: center !important;
+  }
+}
+
 </style>
 </head>
 <body>
@@ -734,19 +747,5 @@ window.setTimeout(()=>{
   rimRotor.style.transform='rotate(0deg)';
 },3000);
 </script>
-</body></html>
-
-/* Final spacing correction: keep the speaker raised and create a clear gap before controls.
-   Button dimensions and dial styling are intentionally unchanged. */
-.speaker{transform:translateY(-4px)!important;margin-bottom:24px!important}
-@media(max-width:600px){.speaker{margin-bottom:20px!important}}
-
-
-/* Visual correction: lift only the speaker grille; preserve control sizes and dial. */
-.speaker{transform:translateY(-18px)!important}
-
-
-/* Fine spacing balance: move LED panel slightly up and speaker slightly up.
-   This opens visible air on both sides of the speaker; controls and dial stay unchanged. */
-.led-panel{transform:translateY(-8px)!important}
-.speaker{transform:translateY(-22px)!important}
+</body>
+</html>
