@@ -745,6 +745,32 @@ button:focus:not(:focus-visible), .ondemand-panel:focus:not(:focus-visible),
 }
 @keyframes tunerHintFade{0%{opacity:0}12%,84%{opacity:1}100%{opacity:0}}
 
+.medical-caption {
+  animation: medicalTextPulse 1.8s ease-in-out infinite;
+}
+.medical-caption::before {
+  content: "";
+  display: inline-block;
+  width: 7px;
+  height: 7px;
+  margin-right: 6px;
+  border-radius: 50%;
+  background: #8dffab;
+  box-shadow: 0 0 5px #8dffab, 0 0 10px #8dffab88;
+  vertical-align: 1px;
+  animation: medicalPulse 1.8s ease-in-out infinite;
+}
+@keyframes medicalPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .35; }
+}
+@keyframes medicalTextPulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: .58; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .medical-caption, .medical-caption::before { animation: none; }
+}
 </style>
 </head>
 <body>
@@ -803,7 +829,7 @@ button:focus:not(:focus-visible), .ondemand-panel:focus:not(:focus-visible),
       <circle cx="34" cy="7.5" r="2.8"/>
     </g>
   </svg>
-</button><span class="control-caption">MEDICAL EXPERTS</span></div>
+</button><span class="control-caption medical-caption">MEDICAL EXPERTS</span></div>
   <div id="tunerButtonGestureHint" aria-hidden="true"><span class="gesture-finger">👆</span></div>
 </div>
 
