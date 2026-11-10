@@ -1,0 +1,171 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>On-Demand Radio Talks | Radio 4 Diabetes India</title>
+<style>
+*{box-sizing:border-box}
+body{margin:0;background:#090a0b;color:#f5f5f5;font-family:Arial,sans-serif}
+header{background:#111820;padding:22px 18px;text-align:center;border-bottom:1px solid #263746}
+.brand{color:#54aaff;font-size:13px;font-weight:bold;letter-spacing:2px}
+h1{font-size:27px;margin:12px 0 7px}
+.subtitle{color:#b7c3cf;font-size:14px}
+main{max-width:850px;margin:auto;padding:22px 16px}
+.back{display:inline-block;color:#75baff;text-decoration:none;margin-bottom:22px;font-size:14px}
+.search{width:100%;padding:15px;border-radius:9px;border:1px solid #34495c;background:#151d25;color:white;font-size:15px;margin-bottom:20px}
+.search:focus{outline:1px solid #54aaff}
+.count{color:#aab8c5;font-size:13px;margin-bottom:15px}
+.recording{background:#141b23;border:1px solid #293947;border-radius:12px;padding:18px;margin-bottom:14px}
+.doctor{font-size:17px;font-weight:bold;color:#fff;margin-bottom:6px}
+.topic{font-size:14px;color:#b7c9d8;margin-bottom:15px}
+.details{font-size:13px;color:#aab8c5;line-height:1.8;margin-bottom:14px}
+audio{width:100%;height:42px}
+.empty{color:#aab8c5;text-align:center;padding:35px 10px}
+footer{text-align:center;color:#778899;font-size:12px;padding:30px}
+</style>
+</head>
+<body>
+<header>
+  <div class="brand">RADIO 4 DIABETES INDIA</div>
+  <h1>On-Demand Radio Talks</h1>
+  <div class="subtitle">From Medical Experts of Radio 4 Diabetes India</div>
+</header>
+
+<main>
+  <a class="back" href="index.html">← Back to Radio</a>
+  <input id="search" class="search" type="search"
+    list="talkSuggestions" autocomplete="off"
+    placeholder="Search doctor name or talk topic...">
+  <datalist id="talkSuggestions"></datalist>
+  <div id="count" class="count">Loading recordings...</div>
+  <div id="recordings"></div>
+</main>
+
+<footer>Radio 4 Diabetes India · Patient Education & Public Health Awareness</footer>
+
+<script>
+const AUDIO_BASE =
+"https://cast4.my-control-panel.com/ondemand/radio4esi/";
+
+let allRecordings = [];
+
+function decodeFilename(filename) {
+  const clean = filename.replace(/\.mp3$/i, "");
+  const match = clean.match(/^Talk by (.+?) on (.+)$/i);
+
+  if (!match) return null;
+
+  return {
+    doctor: match[1].trim(),
+    topic: match[2].trim()
+  };
+}
+
+function render() {
+  const query = document.getElementById("search").value
+    .trim().toLowerCase();
+
+  const filtered = allRecordings.filter(item =>
+    item.doctor.toLowerCase().includes(query) ||
+    item.topic.toLowerCase().includes(query) ||
+    (item.qualification || "").toLowerCase().includes(query) ||
+    (item.registration_number || "").toLowerCase().includes(query) ||
+    (item.state || "").toLowerCase().includes(query)
+  );
+
+  document.getElementById("count").textContent =
+    filtered.length + " recording" + (filtered.length === 1 ? "" : "s");
+
+  const container = document.getElementById("recordings");
+  container.innerHTML = "";
+
+  if (!filtered.length) {
+    container.innerHTML =
+      '<div class="empty">No matching recordings found.</div>';
+    return;
+  }
+
+  filtered.forEach(item => {
+    const card = document.createElement("section");
+    card.className = "recording";
+
+    const doctor = document.createElement("div");
+    doctor.className = "doctor";
+    doctor.textContent = item.doctor;
+
+    const topic = document.createElement("div");
+    topic.className = "topic";
+    topic.textContent = item.topic;
+
+    const details = document.createElement("div");
+    details.className = "details";
+    details.textContent = [
+      item.qualification ? "Qualification: " + item.qualification : "",
+      item.registration_number ? "Medical Registration Number: " + item.registration_number : "",
+      item.state ? "State: " + item.state : ""
+    ].filter(Boolean).join(" | ");
+
+    const player = document.createElement("audio");
+    player.controls = true;
+    player.preload = "none";
+    player.src = item.url;
+
+    card.append(doctor, details, topic, player);
+    container.appendChild(card);
+  });
+}
+
+async function loadRecordings() {
+  try {
+    const response = await fetch("recordings.json?t=" + Date.now());
+    if (!response.ok) throw new Error("Recording list unavailable");
+
+    const data = await response.json();
+
+    allRecordings = data.recordings
+      .map(item => {
+        const details = decodeFilename(item.remote_name);
+        if (!details) return null;
+
+        return {
+          ...details,
+          doctor: item.doctor_name || details.doctor,
+          qualification: item.qualification || "",
+          registration_number: item.registration_number || "",
+          state: item.state || "",
+          topic: item.topic || details.topic,
+          url: AUDIO_BASE + encodeURIComponent(item.remote_name),
+          date: item.completed_at || ""
+        };
+      })
+      .filter(Boolean)
+      .sort((a,b) => b.date.localeCompare(a.date));
+
+    const suggestions = document.getElementById("talkSuggestions");
+    const terms = [...new Set(allRecordings.map(item =>
+      item.doctor
+    ))];
+
+    suggestions.innerHTML = "";
+    terms.forEach(term => {
+      const option = document.createElement("option");
+      option.value = term;
+      suggestions.appendChild(option);
+    });
+
+    render();
+  } catch (error) {
+    document.getElementById("count").textContent =
+      "Unable to load recordings.";
+    document.getElementById("recordings").innerHTML =
+      '<div class="empty">Recordings will appear here when the recording list is connected.</div>';
+  }
+}
+
+document.getElementById("search").addEventListener("input", render);
+loadRecordings();
+</script>
+</body>
+</html>
