@@ -771,6 +771,53 @@ button:focus:not(:focus-visible), .ondemand-panel:focus:not(:focus-visible),
 @media (prefers-reduced-motion: reduce) {
   .medical-caption, .medical-caption::before { animation: none; }
 }
+#ondemandSection .search{width:100%;padding:15px;border-radius:9px;border:1px solid #806333;background:#151411;color:var(--cream);font-size:15px;margin-bottom:20px;box-shadow:inset 0 2px 8px #0008}
+#ondemandSection .search::placeholder{color:#9c9383}
+#ondemandSection .search:focus{outline:1px solid var(--gold);border-color:var(--gold)}
+#ondemandSection .count{color:#c5b99f;font-size:13px;margin-bottom:15px}
+#ondemandSection .recording{background:linear-gradient(145deg,#242428 0%,#111114 48%,#09090a 100%);border:1px solid #8e6c36;border-radius:13px;padding:19px;margin-bottom:15px;box-shadow:0 8px 22px #0009,inset 0 1px 2px #ffffff18}
+#ondemandSection .doctor{font:700 20px Georgia,serif;color:var(--pale);margin-bottom:8px;text-shadow:0 0 8px #d8ad5b33}
+#ondemandSection .topic{font-size:15px;color:#fff2d6;line-height:1.5;margin:13px 0 14px}
+#ondemandSection .details{font-size:13px;color:#d2c9b9;line-height:1.8;margin-bottom:12px}
+#ondemandSection .audio-player{display:flex;align-items:center;gap:12px;padding:11px 13px;border:1px solid #806333;border-radius:10px;background:linear-gradient(180deg,#171719,#080809);box-shadow:inset 0 2px 7px #000,0 2px 7px #0008}
+#ondemandSection .audio-play{flex:0 0 38px;width:38px;height:38px;border-radius:50%;border:1px solid #f0d69a;color:#211707;background:radial-gradient(circle at 35% 25%,#fff1bd,#d8ad5b 52%,#80551e);font-size:16px;font-weight:bold;cursor:pointer;box-shadow:0 0 0 2px #08090b,0 0 0 3px #b88e45,inset 0 1px 3px #fff}
+#ondemandSection .audio-track{flex:1;min-width:0;display:flex;flex-direction:column;gap:7px}
+#ondemandSection .audio-range{width:100%;height:5px;margin:0;appearance:none;-webkit-appearance:none;border-radius:5px;background:linear-gradient(90deg,var(--gold) 0%,#51452f 0%);cursor:pointer;outline:none}
+#ondemandSection .audio-range::-webkit-slider-thumb{appearance:none;-webkit-appearance:none;width:12px;height:12px;border-radius:50%;background:var(--pale);border:1px solid #6c4e20;box-shadow:0 0 6px #d8ad5b88}
+#ondemandSection .audio-range::-moz-range-thumb{width:12px;height:12px;border-radius:50%;background:var(--pale);border:1px solid #6c4e20;box-shadow:0 0 6px #d8ad5b88}
+#ondemandSection .audio-times{display:flex;justify-content:space-between;color:#c4b99f;font:11px Arial,sans-serif;font-variant-numeric:tabular-nums}
+#ondemandSection .audio-status{color:#a99b7d;font-size:10px;letter-spacing:1px;margin-top:8px;min-height:12px}
+#ondemandSection .empty{color:#c5b99f;text-align:center;padding:35px 10px}
+
+/* On-Demand section base styling */
+#ondemandSection {
+  --gold:#d8ad5b;
+  --pale:#f1d99b;
+  --ink:#090a0b;
+  --cream:#f4eee1;
+  --muted:#bdb5a6;
+  box-sizing:border-box;
+  width:100%;
+  padding:28px 16px 35px;
+  color:var(--cream);
+  font-family:Arial,Helvetica,sans-serif;
+  background:radial-gradient(ellipse at 50% 0,#302719 0,#11110f 38%,#08090a 78%);
+}
+#ondemandSection *,
+#ondemandSection *::before,
+#ondemandSection *::after { box-sizing:border-box; }
+#ondemandSection .ondemand-inner { max-width:850px; margin:0 auto; }
+#ondemandSection h2 {
+  font:normal clamp(26px,5vw,34px) Georgia,serif;
+  color:var(--pale);
+  text-align:center;
+  margin:0 0 25px;
+  text-shadow:0 1px 5px #000;
+}
+@media(max-width:480px) {
+  #ondemandSection { padding:22px 12px 28px; }
+}
+
 </style>
 </head>
 <body>
@@ -836,6 +883,19 @@ button:focus:not(:focus-visible), .ondemand-panel:focus:not(:focus-visible),
 </section>
 
 </div>
+
+<section id="ondemandSection">
+  <div class="ondemand-inner">
+    <h2>On-Demand Radio Talks of Doctors</h2>
+    <input id="search" class="search" type="search"
+      list="talkSuggestions" autocomplete="off"
+      placeholder="Search doctor name or talk topic...">
+    <datalist id="talkSuggestions"></datalist>
+    <div id="count" class="count">Loading recordings...</div>
+    <div id="recordings"></div>
+  </div>
+</section>
+
 <audio id="radioStream" preload="none" playsinline></audio>
 <script>
 const STREAM_URL="https://cast4.my-control-panel.com/proxy/radio4esi/live";
@@ -1057,5 +1117,232 @@ window.setTimeout(()=>{
 })();
 </script>
 
+<script>
+(function(){
+
+const root = document.getElementById("ondemandSection");
+const search = root.querySelector("#search");
+const count = root.querySelector("#count");
+const recordings = root.querySelector("#recordings");
+const talkSuggestions = root.querySelector("#talkSuggestions");
+const AUDIO_BASE =
+"https://cast4.my-control-panel.com/ondemand/radio4esi/";
+
+let allRecordings = [];
+
+function decodeFilename(filename) {
+  const clean = filename.replace(/\.mp3$/i, "");
+  const match = clean.match(/^Talk by (.+?) on (.+)$/i);
+
+  if (!match) return null;
+
+  return {
+    doctor: match[1].trim(),
+    topic: match[2].trim()
+  };
+}
+
+function render() {
+  const query = search.value
+    .trim().toLowerCase();
+
+  const filtered = allRecordings.filter(item =>
+    item.doctor.toLowerCase().includes(query) ||
+    item.topic.toLowerCase().includes(query) ||
+    (item.qualification || "").toLowerCase().includes(query) ||
+    (item.registration_number || "").toLowerCase().includes(query) ||
+    (item.state || "").toLowerCase().includes(query)
+  );
+
+  count.textContent =
+    filtered.length + " recording" + (filtered.length === 1 ? "" : "s");
+
+  const container = recordings;
+  container.innerHTML = "";
+
+  if (!filtered.length) {
+    container.innerHTML =
+      '<div class="empty">No matching recordings found.</div>';
+    return;
+  }
+
+  filtered.forEach(item => {
+    const card = document.createElement("section");
+    card.className = "recording";
+
+    const doctor = document.createElement("div");
+    doctor.className = "doctor";
+    doctor.textContent = item.doctor;
+
+    const topic = document.createElement("div");
+    topic.className = "topic";
+    topic.textContent = item.topic;
+
+    const details = document.createElement("div");
+    details.className = "details";
+    details.textContent = [
+      item.qualification ? "Qualification: " + item.qualification : "",
+      item.registration_number ? "Medical Registration Number: " + item.registration_number : "",
+      item.state ? "State: " + item.state : ""
+    ].filter(Boolean).join(" | ");
+
+    const audio = document.createElement("audio");
+    audio.preload = "none";
+    audio.src = item.url;
+
+    const player = document.createElement("div");
+    player.className = "audio-player";
+
+    const play = document.createElement("button");
+    play.className = "audio-play";
+    play.type = "button";
+    play.textContent = "▶";
+    play.setAttribute("aria-label", "Play " + item.doctor + " recording");
+
+    const track = document.createElement("div");
+    track.className = "audio-track";
+
+    const range = document.createElement("input");
+    range.className = "audio-range";
+    range.type = "range";
+    range.min = "0";
+    range.max = "1000";
+    range.value = "0";
+    range.setAttribute("aria-label", "Seek in recording");
+
+    const times = document.createElement("div");
+    times.className = "audio-times";
+    const current = document.createElement("span");
+    const duration = document.createElement("span");
+    current.textContent = "0:00";
+    duration.textContent = "--:--";
+    times.append(current, duration);
+    track.append(range, times);
+    player.append(play, track);
+
+    const status = document.createElement("div");
+    status.className = "audio-status";
+    status.textContent = "READY TO PLAY";
+
+    function formatTime(seconds) {
+      if (!Number.isFinite(seconds)) return "--:--";
+      const mins = Math.floor(seconds / 60);
+      const secs = Math.floor(seconds % 60).toString().padStart(2, "0");
+      return mins + ":" + secs;
+    }
+    function updateProgress() {
+      const percent = audio.duration ? (audio.currentTime / audio.duration) * 100 : 0;
+      range.value = String(Math.round(percent * 10));
+      range.style.background = "linear-gradient(90deg,#d8ad5b " + percent + "%,#51452f " + percent + "%)";
+      current.textContent = formatTime(audio.currentTime);
+      if (Number.isFinite(audio.duration)) duration.textContent = formatTime(audio.duration);
+    }
+    play.addEventListener("click", async () => {
+      if (audio.paused) {
+        root.querySelectorAll(".recording audio").forEach(other => {
+          if (other !== audio) {
+            other.pause();
+            other.currentTime = 0;
+            const otherCard = other.closest(".recording");
+            if (otherCard) {
+              const otherButton = otherCard.querySelector(".audio-play");
+              const otherStatus = otherCard.querySelector(".audio-status");
+              if (otherButton) otherButton.textContent = "▶";
+              if (otherStatus) otherStatus.textContent = "READY TO PLAY";
+            }
+          }
+        });
+        try {
+          await audio.play();
+        } catch (error) {
+          status.textContent = "UNABLE TO PLAY THIS RECORDING";
+        }
+      } else {
+        audio.pause();
+      }
+    });
+    audio.addEventListener("play", () => {
+      play.textContent = "Ⅱ";
+      play.setAttribute("aria-label", "Pause " + item.doctor + " recording");
+      status.textContent = "NOW PLAYING";
+    });
+    audio.addEventListener("pause", () => {
+      play.textContent = "▶";
+      play.setAttribute("aria-label", "Play " + item.doctor + " recording");
+      if (!audio.ended) status.textContent = "PAUSED";
+    });
+    audio.addEventListener("timeupdate", updateProgress);
+    audio.addEventListener("loadedmetadata", updateProgress);
+    audio.addEventListener("ended", () => {
+      play.textContent = "▶";
+      play.setAttribute("aria-label", "Play " + item.doctor + " recording");
+      status.textContent = "PLAYBACK COMPLETE";
+      audio.currentTime = 0;
+      updateProgress();
+    });
+    range.addEventListener("input", () => {
+      if (Number.isFinite(audio.duration)) {
+        audio.currentTime = (Number(range.value) / 1000) * audio.duration;
+        updateProgress();
+      }
+    });
+
+    card.append(doctor, details, topic, player, status, audio);
+    container.appendChild(card);
+  });
+}
+
+async function loadRecordings() {
+  try {
+    const response = await fetch("recordings.json?t=" + Date.now());
+    if (!response.ok) throw new Error("Recording list unavailable");
+
+    const data = await response.json();
+
+    allRecordings = data.recordings
+      .map(item => {
+        const details = decodeFilename(item.remote_name);
+        if (!details) return null;
+
+        return {
+          ...details,
+          doctor: item.doctor_name || details.doctor,
+          qualification: item.qualification || "",
+          registration_number: item.registration_number || "",
+          state: item.state || "",
+          topic: item.topic || details.topic,
+          url: AUDIO_BASE + encodeURIComponent(item.remote_name),
+          date: item.completed_at || ""
+        };
+      })
+      .filter(Boolean)
+      .sort((a,b) => b.date.localeCompare(a.date));
+
+    const suggestions = talkSuggestions;
+    const terms = [...new Set(allRecordings.map(item =>
+      item.doctor
+    ))];
+
+    suggestions.innerHTML = "";
+    terms.forEach(term => {
+      const option = document.createElement("option");
+      option.value = term;
+      suggestions.appendChild(option);
+    });
+
+    render();
+  } catch (error) {
+    count.textContent =
+      "Unable to load recordings.";
+    recordings.innerHTML =
+      '<div class="empty">Recordings will appear here when the recording list is connected.</div>';
+  }
+}
+
+search.addEventListener("input", render);
+loadRecordings();
+
+})();
+</script>
 </body>
 </html>
