@@ -42,8 +42,7 @@ footer{text-align:center;color:#9a907f;font-size:12px;padding:22px 16px 30px;bor
 <body>
 <header>
   <div class="brand">RADIO 4 DIABETES INDIA</div>
-  <h1>On-Demand Radio Talks</h1>
-  <div class="subtitle">From Medical Experts of Radio 4 Diabetes India</div>
+  <h1>On-Demand Radio Talks of Doctors</h1>
 </header>
 
 <main>
@@ -73,7 +72,7 @@ function decodeFilename(filename) {
 
   return {
     doctor: match[1].trim(),
-    topic: match[2].trim()
+    topic: match[2].trim().replace(/\s+\d{8}\s+\d{6}$/, "")
   };
 }
 
@@ -112,14 +111,6 @@ function render() {
     const topic = document.createElement("div");
     topic.className = "topic";
     topic.textContent = item.topic;
-
-    const details = document.createElement("div");
-    details.className = "details";
-    details.textContent = [
-      item.qualification ? "Qualification: " + item.qualification : "",
-      item.registration_number ? "Medical Registration Number: " + item.registration_number : "",
-      item.state ? "State: " + item.state : ""
-    ].filter(Boolean).join(" | ");
 
     const audio = document.createElement("audio");
     audio.preload = "none";
@@ -222,7 +213,7 @@ function render() {
       }
     });
 
-    card.append(doctor, details, topic, player, status, audio);
+    card.append(doctor, topic, player, status, audio);
     container.appendChild(card);
   });
 }
