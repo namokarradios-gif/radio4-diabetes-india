@@ -1,6 +1,14 @@
 {
   "recordings": [
     {
+      "remote_name": "Talk by Dr AKASHKUMAR SINGH on World Diabetes Day Message to Indians 20261114 092856.mp3",
+      "completed_at": "2026-11-14T04:02:44+00:00",
+      "doctor_name": "Dr. AKASHKUMAR SINGH",
+      "qualification": "MD",
+      "registration_number": "G-6492",
+      "state": "Gujarat"
+    },
+    {
       "remote_name": "Talk by Dr AKASHKUMAR SINGH on World Diabetes Day Message to Indians.mp3",
       "completed_at": "2026-11-14T04:00:42+00:00",
       "doctor_name": "Dr. AKASHKUMAR SINGH",
@@ -45,6 +53,14 @@
       "completed_at": "2026-11-10T03:35:21+00:00"
     },
     {
+      "remote_name": "Talk by Dr Bhavini Jayesh Gala on World Diabetes Day Message to Indians 20261114 092938.mp3",
+      "completed_at": "2026-11-14T04:02:44+00:00",
+      "doctor_name": "Dr. Bhavini Jayesh Gala",
+      "qualification": "MBBS",
+      "registration_number": "70439",
+      "state": "Maharashtra"
+    },
+    {
       "remote_name": "Talk by Dr Bhavini Jayesh Gala on World Diabetes Day Message to Indians.mp3",
       "completed_at": "2026-11-14T03:48:32+00:00",
       "doctor_name": "Dr. Bhavini Jayesh Gala",
@@ -59,6 +75,14 @@
       "qualification": "MBBS,MSc in Diabetology ( UK & Chennai) , PG Diploma in Advancing Diabetes Care ( UK) , Dip Card.",
       "registration_number": "49475",
       "state": "West Bengal"
+    },
+    {
+      "remote_name": "Talk by Dr G N SHIVA SHANKAR on World Diabetes Day Message to Indians.mp3",
+      "completed_at": "2026-11-14T04:02:44+00:00",
+      "doctor_name": "Dr. G.N.SHIVA SHANKAR",
+      "qualification": "Mbbs md",
+      "registration_number": "19744",
+      "state": "Karnataka"
     },
     {
       "remote_name": "Talk by Dr Hridaynath Lotliker on World Diabetes Day Message to Indians.mp3",
