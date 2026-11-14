@@ -1139,7 +1139,7 @@ const loadMoreButton = root.querySelector("#loadMoreTalks");
 const backToRadioButton = root.querySelector("#backToRadioBottom");
 
 function decodeFilename(filename) {
-  const clean = filename.replace(/\.mp3$/i, "");
+  const clean = filename.replace(/\.mp3$/i, "").replace(/ \d{8} \d{6}$/, "");
   const match = clean.match(/^Talk by (.+?) on (.+)$/i);
 
   if (!match) return null;
