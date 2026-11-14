@@ -1,6 +1,14 @@
 {
   "recordings": [
     {
+      "remote_name": "Talk by Dr AKASHKUMAR SINGH on World Diabetes Day Message to Indians.mp3",
+      "completed_at": "2026-11-14T04:00:42+00:00",
+      "doctor_name": "Dr. AKASHKUMAR SINGH",
+      "qualification": "MD",
+      "registration_number": "G-6492",
+      "state": "Gujarat"
+    },
+    {
       "remote_name": "Talk by Dr Ajay Yadav on World Diabetes Day Message to Indians.mp3",
       "completed_at": "2026-11-14T02:13:04+00:00",
       "doctor_name": "Dr. Ajay Yadav",
