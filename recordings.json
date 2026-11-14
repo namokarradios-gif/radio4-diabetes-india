@@ -2,7 +2,11 @@
   "recordings": [
     {
       "remote_name": "Talk by Dr Ajay Yadav on World Diabetes Day Message to Indians.mp3",
-      "completed_at": "2026-11-14T02:13:04+00:00"
+      "completed_at": "2026-11-14T02:13:04+00:00",
+      "doctor_name": "Dr. Ajay Yadav",
+      "qualification": "MBBS, MD, Diabetologist",
+      "registration_number": "7124",
+      "state": "Andhra Pradesh"
     },
     {
       "remote_name": "Talk by Dr Banshi Saboo on Anti Obesity GLP1 Drugs.mp3",
@@ -34,67 +38,131 @@
     },
     {
       "remote_name": "Talk by Dr Bhavini Jayesh Gala on World Diabetes Day Message to Indians.mp3",
-      "completed_at": "2026-11-14T03:48:32+00:00"
+      "completed_at": "2026-11-14T03:48:32+00:00",
+      "doctor_name": "Dr. Bhavini Jayesh Gala",
+      "qualification": "MBBS",
+      "registration_number": "70439",
+      "state": "Maharashtra"
     },
     {
       "remote_name": "Talk by Dr Bijay Patni on World Diabetes Day Message to Indians.mp3",
-      "completed_at": "2026-11-13T17:35:41+00:00"
+      "completed_at": "2026-11-13T17:35:41+00:00",
+      "doctor_name": "Dr. Bijay Patni",
+      "qualification": "MBBS,MSc in Diabetology ( UK & Chennai) , PG Diploma in Advancing Diabetes Care ( UK) , Dip Card.",
+      "registration_number": "49475",
+      "state": "West Bengal"
     },
     {
       "remote_name": "Talk by Dr Hridaynath Lotliker on World Diabetes Day Message to Indians.mp3",
-      "completed_at": "2026-11-13T17:08:12+00:00"
+      "completed_at": "2026-11-13T17:08:12+00:00",
+      "doctor_name": "Dr. Hridaynath Lotliker",
+      "qualification": "MBBS, MD",
+      "registration_number": "12-46382",
+      "state": "Goa"
     },
     {
       "remote_name": "Talk by Dr Kiran Kukreja on World Diabetes Day Message to Indians.mp3",
-      "completed_at": "2026-11-13T16:59:34+00:00"
+      "completed_at": "2026-11-13T16:59:34+00:00",
+      "doctor_name": "Dr. Kiran Kukreja",
+      "qualification": "Mbbs",
+      "registration_number": "DMC 9123",
+      "state": "Delhi"
     },
     {
       "remote_name": "Talk by Dr Kirit Kubavat on World Diabetes Day Message to Indians.mp3",
-      "completed_at": "2026-11-13T17:01:38+00:00"
+      "completed_at": "2026-11-13T17:01:38+00:00",
+      "doctor_name": "Dr. Kirit Kubavat",
+      "qualification": "MD",
+      "registration_number": "G 5942",
+      "state": "Gujarat"
     },
     {
       "remote_name": "Talk by Dr Lilly Rodrigues on World Diabetes Day Message to Indians.mp3",
-      "completed_at": "2026-11-13T18:32:44+00:00"
+      "completed_at": "2026-11-13T18:32:44+00:00",
+      "doctor_name": "Dr. Lilly Rodrigues",
+      "qualification": "MBBS DNB Medicine",
+      "registration_number": "26324",
+      "state": "Telangana"
     },
     {
       "remote_name": "Talk by Dr Mohmedmohsin Rakhda on World Diabetes Day Message to Indians 20261113 232651.mp3",
-      "completed_at": "2026-11-13T18:03:15+00:00"
+      "completed_at": "2026-11-13T18:03:15+00:00",
+      "doctor_name": "Dr. Mohmedmohsin Rakhda",
+      "qualification": "MBBS,CCEBDM,CIH",
+      "registration_number": "G-52376",
+      "state": "Gujarat"
     },
     {
       "remote_name": "Talk by Dr Mohmedmohsin Rakhda on World Diabetes Day Message to Indians.mp3",
-      "completed_at": "2026-11-13T17:43:58+00:00"
+      "completed_at": "2026-11-13T17:43:58+00:00",
+      "doctor_name": "Dr. Mohmedmohsin Rakhda",
+      "qualification": "MBBS,CCEBDM,PGCIH",
+      "registration_number": "G-52376",
+      "state": "Gujarat"
     },
     {
       "remote_name": "Talk by Dr Priya Ranjan on World Diabetes Day Message to Indians.mp3",
-      "completed_at": "2026-11-14T01:58:24+00:00"
+      "completed_at": "2026-11-14T01:58:24+00:00",
+      "doctor_name": "Dr. Priya Ranjan",
+      "qualification": "MBBS",
+      "registration_number": "45732",
+      "state": "Jharkhand"
     },
     {
       "remote_name": "Talk by Dr Prof Dr Jayanta K Panda on World Diabetes Day Message to Indians.mp3",
-      "completed_at": "2026-11-13T19:58:27+00:00"
+      "completed_at": "2026-11-13T19:58:27+00:00",
+      "doctor_name": "Dr. Prof Dr Jayanta K. Panda",
+      "qualification": "MD Medicine FRCP London",
+      "registration_number": "11524",
+      "state": "Odisha"
     },
     {
       "remote_name": "Talk by Dr Rajiv Garg on World Diabetes Day Message to Indians.mp3",
-      "completed_at": "2026-11-14T02:43:45+00:00"
+      "completed_at": "2026-11-14T02:43:45+00:00",
+      "doctor_name": "Dr. Rajiv Garg",
+      "qualification": "MBBS",
+      "registration_number": "81710",
+      "state": "Himachal Pradesh"
     },
     {
       "remote_name": "Talk by Dr Raka Shivhare on World Diabetes Day Message to Indians.mp3",
-      "completed_at": "2026-11-14T02:41:42+00:00"
+      "completed_at": "2026-11-14T02:41:42+00:00",
+      "doctor_name": "Dr. Raka Shivhare",
+      "qualification": "MD Diabetologist",
+      "registration_number": "CGMC1547",
+      "state": "Chhattisgarh"
     },
     {
       "remote_name": "Talk by Dr Soumyaranjan Mohanty on World Diabetes Day Message to Indians.mp3",
-      "completed_at": "2026-11-13T18:11:38+00:00"
+      "completed_at": "2026-11-13T18:11:38+00:00",
+      "doctor_name": "Dr. Soumyaranjan Mohanty",
+      "qualification": "MBBS",
+      "registration_number": "20022",
+      "state": "Odisha"
     },
     {
       "remote_name": "Talk by Dr Sumesh Raj on World Diabetes Day Message to Indians.mp3",
-      "completed_at": "2026-11-14T03:42:28+00:00"
+      "completed_at": "2026-11-14T03:42:28+00:00",
+      "doctor_name": "Dr. Sumesh Raj",
+      "qualification": "MD FRCP D.DIAB",
+      "registration_number": "29021",
+      "state": "Kerala"
     },
     {
       "remote_name": "Talk by Dr Sunil m Chhaya on World Diabetes Day Message to Indians.mp3",
-      "completed_at": "2026-11-14T02:19:12+00:00"
+      "completed_at": "2026-11-14T02:19:12+00:00",
+      "doctor_name": "Dr. Sunil m Chhaya",
+      "qualification": "M D",
+      "registration_number": "G 2535",
+      "state": "Gujarat"
     },
     {
       "remote_name": "Talk by Dr Sunil on World Diabetes Day Message to Indians.mp3",
-      "completed_at": "2026-11-13T17:43:58+00:00"
+      "completed_at": "2026-11-13T17:43:58+00:00",
+      "doctor_name": "Dr. Sunil",
+      "qualification": "MS",
+      "registration_number": "26220",
+      "state": "Karnataka"
     }
   ]
 }
