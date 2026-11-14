@@ -24,7 +24,6 @@ main{max-width:850px;margin:auto;padding:20px 16px 24px}
 .recording{background:linear-gradient(145deg,#242428 0%,#111114 48%,#09090a 100%);border:1px solid #8e6c36;border-radius:13px;padding:19px;margin-bottom:15px;box-shadow:0 8px 22px #0009,inset 0 1px 2px #ffffff18}
 .doctor{font:700 20px Georgia,serif;color:var(--pale);margin-bottom:8px;text-shadow:0 0 8px #d8ad5b33}
 .topic{font-size:15px;color:#fff2d6;line-height:1.5;margin:13px 0 14px}
-.details{font-size:13px;color:#d2c9b9;line-height:1.8;margin-bottom:12px}
 .audio-player{display:flex;align-items:center;gap:12px;padding:11px 13px;border:1px solid #806333;border-radius:10px;background:linear-gradient(180deg,#171719,#080809);box-shadow:inset 0 2px 7px #000,0 2px 7px #0008}
 .audio-play{flex:0 0 38px;width:38px;height:38px;border-radius:50%;border:1px solid #f0d69a;color:#211707;background:radial-gradient(circle at 35% 25%,#fff1bd,#d8ad5b 52%,#80551e);font-size:16px;font-weight:bold;cursor:pointer;box-shadow:0 0 0 2px #08090b,0 0 0 3px #b88e45,inset 0 1px 3px #fff}
 .audio-track{flex:1;min-width:0;display:flex;flex-direction:column;gap:7px}
@@ -83,9 +82,6 @@ function render() {
   const filtered = allRecordings.filter(item =>
     item.doctor.toLowerCase().includes(query) ||
     item.topic.toLowerCase().includes(query) ||
-    (item.qualification || "").toLowerCase().includes(query) ||
-    (item.registration_number || "").toLowerCase().includes(query) ||
-    (item.state || "").toLowerCase().includes(query)
   );
 
   document.getElementById("count").textContent =
@@ -233,9 +229,6 @@ async function loadRecordings() {
         return {
           ...details,
           doctor: item.doctor_name || details.doctor,
-          qualification: item.qualification || "",
-          registration_number: item.registration_number || "",
-          state: item.state || "",
           topic: item.topic || details.topic,
           url: AUDIO_BASE + encodeURIComponent(item.remote_name),
           date: item.completed_at || ""
