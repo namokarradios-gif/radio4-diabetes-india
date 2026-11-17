@@ -811,11 +811,10 @@ button:focus:not(:focus-visible), .ondemand-panel:focus:not(:focus-visible),
 #ondemandSection *::after { box-sizing:border-box; }
 #ondemandSection .ondemand-inner { max-width:850px; margin:0 auto; }
 #ondemandSection h2 {
-  font:normal clamp(26px,5vw,34px) Georgia,serif;
-  color:var(--pale);
+  margin:0 0 20px;
   text-align:center;
-  margin:0 0 25px;
-  text-shadow:0 1px 5px #000;
+  color:#ffffff;
+  font:700 clamp(22px,4vw,28px) Georgia,serif;
 }
 @media(max-width:480px) {
   #ondemandSection { padding:22px 12px 28px; }
@@ -1100,6 +1099,107 @@ html,body{
 </div>
 
 
+<section id="medicalExpertsHome">
+  <div class="experts-inner">
+    <h2>Our Diabetes India Medical Experts</h2>
+    <label for="expertState">Select State</label>
+    <select id="expertState">
+      <option value="">All States</option>
+    </select>
+    <label for="expertSelect">Name of Medical Expert</label>
+    <select id="expertSelect">
+      <option value="">Select Medical Expert</option>
+    </select>
+    <div id="doctorProfilePanel" hidden aria-live="polite">
+      <div class="doctor-profile-inner">
+        <div class="doctor-profile-eyebrow">DIABETES INDIA RADIO</div>
+        <h3 id="doctorProfileName"></h3>
+        <div id="doctorProfileQualification"></div>
+        <div id="doctorProfileDetails"></div>
+        <div id="doctorProfileId"></div>
+      </div>
+    </div>
+
+  </div>
+</section>
+<script>
+(async function(){
+  const doctorSelect=document.getElementById("expertSelect");
+  const stateSelect=document.getElementById("expertState");
+  let doctors=[];
+  try{
+    const response=await fetch("/doctors.json",{cache:"no-store"});
+    if(!response.ok) throw new Error("Directory unavailable");
+    const data=await response.json();
+    doctors=data.doctors;
+    if(!Array.isArray(doctors)) throw new Error("Invalid directory data");
+
+    const sorted=[...doctors].sort((a,b)=>
+      a.doctor_name.localeCompare(b.doctor_name,undefined,{sensitivity:"base"})
+    );
+
+    [...new Set(sorted.map(d=>d.state.trim()))]
+      .sort((a,b)=>a.localeCompare(b))
+      .forEach(state=>{
+        const option=document.createElement("option");
+        option.value=state;
+        option.textContent=state;
+        stateSelect.appendChild(option);
+      });
+
+    function populateDoctors(){
+      const selected=stateSelect.value;
+      doctorSelect.replaceChildren();
+      const placeholder=document.createElement("option");
+      placeholder.value="";
+      placeholder.textContent="Select Medical Expert";
+      doctorSelect.appendChild(placeholder);
+
+      sorted.filter(d=>!selected || d.state.trim()===selected)
+        .forEach(d=>{
+          const option=document.createElement("option");
+          option.value=d.doctor_id;
+          option.textContent=d.doctor_name;
+          doctorSelect.appendChild(option);
+        });
+    }
+
+    stateSelect.addEventListener("change",populateDoctors);
+    function selectDoctorFromUrl(){
+      const doctorId = new URLSearchParams(window.location.search).get("doctor") || "";
+      const doctor = sorted.find(d => d.doctor_id === doctorId);
+      if (doctor) {
+        const stateExists = [...stateSelect.options].some(o => o.value === doctor.state.trim());
+        stateSelect.value = stateExists ? doctor.state.trim() : "";
+        populateDoctors();
+        doctorSelect.value = doctor.doctor_id;
+      } else {
+        doctorSelect.value = "";
+      }
+      window.dispatchEvent(new CustomEvent("radio4:doctorchange", {
+        detail: { doctor_id: doctor ? doctor.doctor_id : "" }
+      }));
+    }
+
+    doctorSelect.addEventListener("change",()=>{
+      const doctorId = doctorSelect.value;
+      const url = new URL(window.location.href);
+      if (doctorId) url.searchParams.set("doctor", doctorId);
+      else url.searchParams.delete("doctor");
+      history.pushState({}, "", url);
+      selectDoctorFromUrl();
+    });
+
+    window.addEventListener("popstate", selectDoctorFromUrl);
+
+    populateDoctors();
+    selectDoctorFromUrl();
+  }catch(error){
+    doctorSelect.innerHTML='<option value="">Unable to load Medical Experts</option>';
+    console.error(error);
+  }
+})();
+</script>
 <section id="ondemandSection">
   <div class="ondemand-inner">
     <h2>On-Demand Radio Talks of Doctors</h2>
@@ -1116,6 +1216,10 @@ html,body{
     <div id="count" class="count">Loading recordings...</div>
     <div id="recordings"></div>
     <button id="loadMoreTalks" class="ondemand-action" type="button" hidden>Load More Talks</button>
+    <div id="publicHealthDisclaimer">
+      <h3>Public Health Education Disclaimer</h3>
+      <p>The audio content on this platform is intended for general patient education and public health awareness. It is not a substitute for individual medical consultation, diagnosis or treatment. Listeners should consult their treating healthcare professional for personal medical advice. Views expressed in individual recordings are those of the respective speakers.</p>
+    </div>
     <button id="backToRadioBottom" class="ondemand-action secondary" type="button">↑ Back to Radio</button>
   </div>
 </section>
@@ -1132,6 +1236,8 @@ const AUDIO_BASE =
 "https://cast4.my-control-panel.com/ondemand/radio4esi/";
 
 let allRecordings = [];
+let doctorProfiles = {};
+let activeDoctorId = new URLSearchParams(window.location.search).get("doctor") || "";
 let visibleLimit = 10;
 const PAGE_SIZE = 10;
 const sortControl = root.querySelector("#recordingSort");
@@ -1154,12 +1260,20 @@ function render() {
   const query = search.value
     .trim().toLowerCase();
 
+  const selectedProfile = doctorProfiles[activeDoctorId] || null;
+  const allowedFiles = selectedProfile
+    ? new Set((selectedProfile.recordings || []).map(r => r.remote_name))
+    : null;
+
   const filtered = allRecordings.filter(item =>
-    item.doctor.toLowerCase().includes(query) ||
-    item.topic.toLowerCase().includes(query) ||
-    (item.qualification || "").toLowerCase().includes(query) ||
-    (item.registration_number || "").toLowerCase().includes(query) ||
-    (item.state || "").toLowerCase().includes(query)
+    (!allowedFiles || allowedFiles.has(item.remote_name)) &&
+    (
+      item.doctor.toLowerCase().includes(query) ||
+      item.topic.toLowerCase().includes(query) ||
+      (item.qualification || "").toLowerCase().includes(query) ||
+      (item.registration_number || "").toLowerCase().includes(query) ||
+      (item.state || "").toLowerCase().includes(query)
+    )
   );
 
   const sortBy = sortControl.value;
@@ -1307,8 +1421,55 @@ function render() {
   });
 }
 
+function updateDoctorProfile(doctorId) {
+  activeDoctorId = doctorId || "";
+  const panel = document.getElementById("doctorProfilePanel");
+  const profile = doctorProfiles[activeDoctorId];
+
+  if (!panel) return;
+
+  const searchLabel = root.querySelector('label[for="recordingSort"]');
+  [search, talkSuggestions, searchLabel, sortControl].forEach(el => {
+    if (el) el.hidden = !!profile;
+  });
+  const expertsSection = document.getElementById("medicalExpertsHome");
+  if (expertsSection) {
+    expertsSection.querySelectorAll("label, select").forEach(el => {
+      el.hidden = !!profile;
+    });
+  }
+  backToRadioButton.textContent = profile ? "Home Page" : "↑ Back to Radio";
+
+  if (!profile) {
+    panel.hidden = true;
+    visibleLimit = PAGE_SIZE;
+    render();
+    return;
+  }
+
+  document.getElementById("doctorProfileName").textContent = profile.doctor_name || "";
+  document.getElementById("doctorProfileQualification").textContent = profile.qualification || "";
+  document.getElementById("doctorProfileDetails").textContent = [
+    profile.state ? "State: " + profile.state : "",
+    profile.registration_number ? "Medical Registration Number: " + profile.registration_number : ""
+  ].filter(Boolean).join(" | ");
+  document.getElementById("doctorProfileId").textContent = "DOCTOR ID: " + profile.doctor_id;
+  panel.hidden = false;
+  visibleLimit = PAGE_SIZE;
+  render();
+}
+
+window.addEventListener("radio4:doctorchange", event => {
+  updateDoctorProfile(event.detail?.doctor_id || "");
+});
+
 async function loadRecordings() {
   try {
+    const profileResponse = await fetch("doctor_profiles.json?t=" + Date.now());
+    if (!profileResponse.ok) throw new Error("Doctor profiles unavailable");
+    const profileData = await profileResponse.json();
+    doctorProfiles = profileData.doctors || {};
+
     const response = await fetch("recordings.json?t=" + Date.now());
     if (!response.ok) throw new Error("Recording list unavailable");
 
@@ -1322,6 +1483,7 @@ async function loadRecordings() {
         return {
           ...details,
           doctor: item.doctor_name || details.doctor,
+          remote_name: item.remote_name,
           qualification: item.qualification || "",
           registration_number: item.registration_number || "",
           state: item.state || "",
@@ -1345,7 +1507,7 @@ async function loadRecordings() {
       suggestions.appendChild(option);
     });
 
-    render();
+    updateDoctorProfile(activeDoctorId);
   } catch (error) {
     count.textContent =
       "Unable to load recordings.";
@@ -1358,6 +1520,12 @@ search.addEventListener("input", () => { visibleLimit = PAGE_SIZE; render(); });
 sortControl.addEventListener("change", () => { visibleLimit = PAGE_SIZE; render(); });
 loadMoreButton.addEventListener("click", () => { visibleLimit += PAGE_SIZE; render(); });
 backToRadioButton.addEventListener("click", () => {
+  if (activeDoctorId) {
+    const homeUrl = new URL(window.location.href);
+    homeUrl.searchParams.delete("doctor");
+    window.location.href = homeUrl.pathname + homeUrl.search + homeUrl.hash;
+    return;
+  }
   const radioSection = document.querySelector(".radio");
   if (radioSection) radioSection.scrollIntoView({behavior:"smooth", block:"start"});
   else window.scrollTo({top:0, behavior:"smooth"});
@@ -1719,6 +1887,76 @@ html,body{
 }
 </style>
 
+
+
+
+
+<style id="medical-experts-home-style">
+#medicalExpertsHome{
+  padding:26px 16px 30px;
+  background:#050608;
+  border-top:1px solid #806333;
+  border-bottom:1px solid #806333;
+}
+#medicalExpertsHome .experts-inner{max-width:760px;margin:0 auto}
+#medicalExpertsHome h2{
+  margin:0 0 20px;text-align:center;color:#e0b866;
+  font:700 clamp(22px,4vw,28px) Georgia,serif;
+}
+#medicalExpertsHome label{
+  display:block;color:#d8bd85;font-size:14px;
+  font-weight:700;margin:15px 0 8px;
+}
+#medicalExpertsHome select{
+  display:block;width:100%;padding:14px 15px;
+  border:1px solid #806333;border-radius:9px;
+  background:#151411;color:#fff0cf;font-size:15px;
+}
+#medicalExpertsHome select:focus{
+  outline:1px solid #e0b866;border-color:#e0b866;
+}
+#doctorProfilePanel{
+  margin:24px auto 0;
+  max-width:760px;
+  padding:22px 18px;
+  border:1px solid #806333;
+  border-radius:12px;
+  background:linear-gradient(145deg,#242428,#111114 65%,#09090a);
+  text-align:center;
+}
+#doctorProfilePanel[hidden]{display:none}
+.doctor-profile-eyebrow{
+  color:#d8ad5b;font-size:11px;letter-spacing:2px;
+  margin-bottom:10px;font-weight:700
+}
+#doctorProfileName{
+  color:#f1d99b;font:700 clamp(22px,4vw,28px) Georgia,serif;
+  margin:0 0 10px
+}
+#doctorProfileQualification{color:#fff0cf;font-size:15px;margin-bottom:9px}
+#doctorProfileDetails{color:#d2c9b9;font-size:13px;line-height:1.8}
+#doctorProfileId{color:#bda16b;font-size:11px;margin-top:10px;letter-spacing:1px}
+#ondemandSection #search,
+#ondemandSection .sort-label,
+#ondemandSection .sort-select{
+  display:none!important;
+}
+#medicalExpertsHome[hidden]{display:none!important}
+#medicalExpertsHome label[hidden],
+#medicalExpertsHome select[hidden]{display:none!important}
+#publicHealthDisclaimer{
+  max-width:900px;margin:28px auto 22px;padding:18px 20px;
+  border:1px solid #806333;border-radius:10px;
+  background:#101012;color:#cfc5b3;text-align:left;
+}
+#publicHealthDisclaimer h3{
+  margin:0 0 9px;color:#e0b866;font:700 16px Georgia,serif;
+}
+#publicHealthDisclaimer p{
+  margin:0;font:13px/1.7 Arial,Helvetica,sans-serif;
+}
+</style>
+
 <footer id="sitePoweredBy">Powered by Radio 4 Public Health</footer>
 <style>
 #ondemandSection .sort-label{display:block;color:#c5b99f;font-size:13px;margin:0 0 7px}
@@ -1727,7 +1965,7 @@ html,body{
 #ondemandSection .ondemand-action.secondary{background:#171719;color:#f1d99b}
 #ondemandSection .ondemand-action[hidden]{display:none}
 #sitePoweredBy{text-align:center;padding:20px 12px 24px;background:#050608;color:#bdb5a6;border-top:1px solid #ffffff18;font:12px Arial,Helvetica,sans-serif}
-@media(max-width:480px){#ondemandSection h2{font-size:20px;white-space:nowrap;letter-spacing:-.45px}#ondemandSection .doctor{font-size:18px}}
+@media(max-width:480px){#ondemandSection h2{white-space:nowrap;letter-spacing:-.45px}#ondemandSection .doctor{font-size:18px}}
 </style>
 
 
