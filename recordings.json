@@ -125,6 +125,14 @@
       "state": "Goa"
     },
     {
+      "remote_name": "Talk by Dr Jayesh Desai on World Diabetes Day Message to Indians.mp3",
+      "completed_at": "2026-11-18T15:27:15+00:00",
+      "doctor_name": "Dr. Jayesh Desai",
+      "qualification": "MD",
+      "registration_number": "37896",
+      "state": "Goa"
+    },
+    {
       "remote_name": "Talk by Dr Kiran Kukreja on World Diabetes Day Message to Indians.mp3",
       "completed_at": "2026-11-13T16:59:34+00:00",
       "doctor_name": "Dr. Kiran Kukreja",
@@ -251,14 +259,6 @@
       "qualification": "MS",
       "registration_number": "26220",
       "state": "Karnataka"
-    },
-    {
-      "remote_name": "Talk by Dr Test 1 on World Diabetes Day Message to Indians.mp3",
-      "completed_at": "2026-11-18T09:05:26+00:00",
-      "doctor_name": "Dr. Test 1",
-      "qualification": "Md",
-      "registration_number": "1244",
-      "state": "Bihar"
     }
   ]
 }

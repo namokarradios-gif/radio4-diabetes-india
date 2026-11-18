@@ -1164,7 +1164,15 @@ html,body{
         });
     }
 
-    stateSelect.addEventListener("change",populateDoctors);
+    stateSelect.addEventListener("change",()=>{
+      populateDoctors();
+      const url = new URL(window.location.href);
+      url.searchParams.delete("doctor");
+      history.replaceState({}, "", url);
+      window.dispatchEvent(new CustomEvent("radio4:doctorchange", {
+        detail: { doctor_id: "" }
+      }));
+    });
     function selectDoctorFromUrl(){
       const doctorId = new URLSearchParams(window.location.search).get("doctor") || "";
       const doctor = sorted.find(d => d.doctor_id === doctorId);
@@ -1260,13 +1268,12 @@ function render() {
   const query = search.value
     .trim().toLowerCase();
 
-  const selectedProfile = doctorProfiles[activeDoctorId] || null;
-  const allowedFiles = selectedProfile
-    ? new Set((selectedProfile.recordings || []).map(r => r.remote_name))
-    : null;
+  const selectedState =
+    (document.getElementById("expertState")?.value || "").trim().toLowerCase();
 
   const filtered = allRecordings.filter(item =>
-    (!allowedFiles || allowedFiles.has(item.remote_name)) &&
+    (!activeDoctorId || item.doctor_id === activeDoctorId) &&
+    (!selectedState || (item.state || "").trim().toLowerCase() === selectedState) &&
     (
       item.doctor.toLowerCase().includes(query) ||
       item.topic.toLowerCase().includes(query) ||
@@ -1428,16 +1435,19 @@ function updateDoctorProfile(doctorId) {
 
   if (!panel) return;
 
-  const searchLabel = root.querySelector('label[for="recordingSort"]');
-  [search, talkSuggestions, searchLabel, sortControl].forEach(el => {
-    if (el) el.hidden = !!profile;
-  });
   const expertsSection = document.getElementById("medicalExpertsHome");
   if (expertsSection) {
-    expertsSection.querySelectorAll("label, select").forEach(el => {
-      el.hidden = !!profile;
+    const heading = expertsSection.querySelector("h2");
+    const stateLabel = expertsSection.querySelector('label[for="expertState"]');
+    const stateSelect = expertsSection.querySelector("#expertState");
+    const doctorLabel = expertsSection.querySelector('label[for="expertSelect"]');
+    const doctorSelect = expertsSection.querySelector("#expertSelect");
+
+    [stateLabel, stateSelect, doctorLabel, doctorSelect].forEach(el => {
+      if (el) el.hidden = !!profile;
     });
   }
+
   backToRadioButton.textContent = profile ? "Home Page" : "↑ Back to Radio";
 
   if (!profile) {
@@ -1465,15 +1475,27 @@ window.addEventListener("radio4:doctorchange", event => {
 
 async function loadRecordings() {
   try {
-    const profileResponse = await fetch("doctor_profiles.json?t=" + Date.now());
-    if (!profileResponse.ok) throw new Error("Doctor profiles unavailable");
-    const profileData = await profileResponse.json();
-    doctorProfiles = profileData.doctors || {};
-
     const response = await fetch("recordings.json?t=" + Date.now());
     if (!response.ok) throw new Error("Recording list unavailable");
 
     const data = await response.json();
+
+    try {
+      const profilesResponse = await fetch("doctor_profiles.json?t=" + Date.now());
+      if (profilesResponse.ok) {
+        const profilesData = await profilesResponse.json();
+        doctorProfiles = profilesData.doctors || {};
+      }
+    } catch (profileError) {
+      console.warn("Doctor ID mapping unavailable:", profileError);
+    }
+
+    const recordingDoctorIds = {};
+    Object.entries(doctorProfiles).forEach(([doctorId, profile]) => {
+      (profile.recordings || []).forEach(recording => {
+        recordingDoctorIds[recording.remote_name] = doctorId;
+      });
+    });
 
     allRecordings = data.recordings
       .map(item => {
@@ -1482,6 +1504,7 @@ async function loadRecordings() {
 
         return {
           ...details,
+          doctor_id: recordingDoctorIds[item.remote_name] || "",
           doctor: item.doctor_name || details.doctor,
           remote_name: item.remote_name,
           qualification: item.qualification || "",
@@ -1965,7 +1988,7 @@ html,body{
 #ondemandSection .ondemand-action.secondary{background:#171719;color:#f1d99b}
 #ondemandSection .ondemand-action[hidden]{display:none}
 #sitePoweredBy{text-align:center;padding:20px 12px 24px;background:#050608;color:#bdb5a6;border-top:1px solid #ffffff18;font:12px Arial,Helvetica,sans-serif}
-@media(max-width:480px){#ondemandSection h2{white-space:nowrap;letter-spacing:-.45px}#ondemandSection .doctor{font-size:18px}}
+@media(max-width:480px){#ondemandSection h2,#medicalExpertsHome h2{font-size:20px}#ondemandSection h2{white-space:nowrap;letter-spacing:-.45px}#ondemandSection .doctor{font-size:18px}}
 </style>
 
 
