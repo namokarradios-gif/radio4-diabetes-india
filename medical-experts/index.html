@@ -59,7 +59,7 @@ h1{font-size:16px;white-space:nowrap;letter-spacing:0;margin-left:-4px;margin-ri
 <script>
 (async()=>{
 const grid=document.getElementById('directoryGrid');
-const count=document.getElementById('directoryCount');
+
 const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
 try{
 const [dr,pr]=await Promise.all([
@@ -113,7 +113,7 @@ html+=`<article class="card available">
 }
 grid.innerHTML=html;
 }catch(e){
-count.textContent='Directory temporarily unavailable';
+grid.innerHTML='<p style="color:#d8ad5b">Directory temporarily unavailable. Please refresh.</p>';
 grid.innerHTML='<p style="color:#d8ad5b">Unable to load the directory. Please refresh.</p>';
 console.error(e);
 }
