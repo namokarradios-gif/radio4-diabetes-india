@@ -1102,14 +1102,15 @@ html,body{
 <section id="medicalExpertsHome">
   <div class="experts-inner">
     <h2>Diabetes India Medical Experts</h2>
-    <label for="expertState">Select State</label>
+    <label for="expertState">Select State Live on Radio</label>
     <select id="expertState">
       <option value="">All States</option>
     </select>
-    <label for="expertSelect">Name of Medical Expert</label>
+    <label for="expertSelect">Name of Medical Expert Live on Radio</label>
     <select id="expertSelect">
       <option value="">Select Medical Expert</option>
     </select>
+    <a id="medicalExpertsDirectoryLink" href="/medical-experts/">OUR MEDICAL EXPERTS DIRECTORY</a>
     <div id="doctorProfilePanel" hidden aria-live="polite">
       <div class="doctor-profile-inner">
         <div class="doctor-profile-eyebrow">DIABETES INDIA RADIO</div>
@@ -1937,6 +1938,16 @@ html,body{
 }
 #medicalExpertsHome select:focus{
   outline:1px solid #e0b866;border-color:#e0b866;
+}
+#medicalExpertsDirectoryLink{
+  display:block;margin:20px auto 0;padding:14px 18px;
+  max-width:420px;text-align:center;text-decoration:none;
+  border:1px solid #806333;border-radius:9px;
+  background:#151411;color:#e0b866;font-weight:700;
+  letter-spacing:.5px;font-size:14px;
+}
+#medicalExpertsDirectoryLink:hover{
+  background:#242018;border-color:#e0b866;
 }
 #doctorProfilePanel{
   margin:24px auto 0;
