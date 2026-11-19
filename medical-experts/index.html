@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<meta name="theme-color" content="#090a0b">
+<title>Our Medical Experts Directory | Diabetes India Radio</title>
+<style>
+:root{--gold:#d8ad5b;--pale:#f1d99b}
+*{box-sizing:border-box}
+body{margin:0;background:#050608;color:#f4eee1;font-family:Arial,Helvetica,sans-serif}
+header{text-align:center;padding:30px 15px;border-bottom:1px solid #ffffff25;background:#090a0b}
+.brand{font-size:11px;letter-spacing:3px;color:var(--gold)}
+h1{font-size:clamp(23px,5vw,36px);color:var(--pale);margin:16px 0 8px}
+.subtitle{font-size:13px;color:#aaa49a;line-height:1.6}
+.capacity{font-size:30px;font-weight:bold;color:var(--gold);letter-spacing:2px;margin:18px 0 5px}
+.capacity small{font-size:13px;color:#aaa49a;font-weight:normal}
+main{max-width:1180px;margin:auto;padding:25px 16px 55px}
+.toolbar{display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-bottom:22px}
+.count{color:var(--gold);font-size:13px}
+.back{display:block;width:100%;max-width:320px;margin:18px auto;padding:13px 18px;border:1px solid #b88e45;border-radius:9px;background:#171719;color:#f1d99b;text-decoration:none;font-weight:700;font-size:14px;cursor:pointer}
+.grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(205px,1fr));gap:15px}
+.card{min-height:245px;border:1px solid #d8ad5b66;border-radius:10px;background:linear-gradient(145deg,#19191c,#090a0b 75%);padding:16px 12px;text-align:center;display:flex;flex-direction:column;align-items:center}
+.slot{font-size:10px;letter-spacing:2px;color:var(--gold);margin-bottom:12px}
+.photo{width:72px;height:72px;border:1px solid #d8ad5b99;border-radius:50%;display:grid;place-items:center;margin-bottom:12px;background:radial-gradient(circle,#29251c,#101012 70%);color:var(--gold);font-size:28px}
+.name{font-size:15px;font-weight:bold;color:var(--pale);line-height:1.4;margin-bottom:7px}
+.qualification{font-size:12px;color:#d0c8b9;line-height:1.5}
+.state{font-size:11px;color:#aaa49a;margin-top:7px}
+.listen{display:inline-block;margin-top:auto;padding:10px 12px;border:1px solid var(--gold);border-radius:5px;color:var(--pale);text-decoration:none;font-size:10px;letter-spacing:.6px;font-weight:bold}
+.available{border-style:dashed;border-color:#ffffff35;background:#101114}
+.available .photo{border-style:dashed;color:#a58b59;background:#151515}
+.available .name{font-size:14px;color:#b9a477;margin-top:5px}
+.available .qualification{color:#888}
+footer{text-align:center;padding:24px;color:#777;font-size:11px;border-top:1px solid #ffffff18}
+@media(max-width:480px){
+h1{font-size:16px;white-space:nowrap;letter-spacing:0;margin-left:-4px;margin-right:-4px}
+.grid{grid-template-columns:repeat(2,minmax(0,1fr));gap:10px}
+.card{padding:13px 8px;min-height:235px}
+.name{font-size:13px}
+}
+</style>
+</head>
+<body>
+<header>
+<div class="brand">DIABETES INDIA RADIO</div>
+<h1>OUR MEDICAL EXPERTS DIRECTORY</h1>
+<div class="capacity">50 <small>OF</small> 500</div>
+<div class="subtitle">Building India's National Network of Diabetes Medical Experts</div>
+</header>
+<main>
+<div class="toolbar">
+
+
+</div>
+<div class="grid" id="directoryGrid"></div>
+<div style="text-align:center;margin:32px 0 10px;"><a class="back" href="/">Home Page</a></div>
+</main>
+<footer>Powered by Radio 4 Public Health</footer>
+<script>
+(async()=>{
+const grid=document.getElementById('directoryGrid');
+const count=document.getElementById('directoryCount');
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+try{
+const [dr,pr]=await Promise.all([
+fetch('../doctors.json',{cache:'no-store'}),
+fetch('../doctor_profiles.json',{cache:'no-store'})
+]);
+if(!dr.ok||!pr.ok)throw Error('Directory data unavailable');
+const dd=await dr.json(),pd=await pr.json();
+const profiles=pd.doctors||{};
+const doctors=(dd.doctors||[])
+.filter(d=>profiles[d.doctor_id])
+.sort((a,b)=>(a.doctor_id||'').localeCompare(b.doctor_id||'',undefined,{numeric:true}));
+if(doctors.length>50)throw Error('More than 50 active doctors: directory layout needs expansion.');
+
+let html='';
+for(let i=0;i<50;i++){
+const n=String(i+1).padStart(3,'0'),d=doctors[i];
+if(d){
+const p=profiles[d.doctor_id]||d;
+const url='/?doctor='+encodeURIComponent(d.doctor_id);
+html+=`<article class="card">
+<div class="slot">MEDICAL EXPERT · ${n}</div>
+<div class="photo"><svg viewBox="0 0 100 100" aria-hidden="true">
+<circle cx="50" cy="50" r="48" fill="#090a0b" stroke="#d8ad5b" stroke-width="2"/>
+<circle cx="50" cy="29" r="13" fill="#85898c"/>
+<path d="M19 79 Q21 57 38 53 L50 72 L62 53 Q79 57 81 79 Q50 101 19 79Z" fill="#85898c"/>
+<path d="M39 55 Q29 64 31 74 Q32 81 39 81 M61 55 Q71 64 69 74 Q68 81 61 81" fill="none" stroke="#fff" stroke-width="2.6"/>
+<circle cx="39" cy="81" r="3" fill="#fff"/><circle cx="61" cy="81" r="3" fill="#fff"/>
+<path d="M50 69 V84 M43 76.5 H57" stroke="#fff" stroke-width="3"/>
+</svg></div>
+<div class="name">${esc(d.doctor_name)}</div>
+<div class="qualification">${esc(d.qualification)}</div>
+<div class="state">${esc(d.state)}</div>
+<a class="listen" href="${esc(url)}">LISTEN TO DOCTOR</a>
+</article>`;
+}else{
+html+=`<article class="card available">
+<div class="slot">DIRECTORY SLOT · ${n}</div>
+<div class="photo"><svg viewBox="0 0 100 100" aria-hidden="true">
+<circle cx="50" cy="50" r="48" fill="#090a0b" stroke="#d8ad5b" stroke-width="2"/>
+<circle cx="50" cy="29" r="13" fill="#85898c"/>
+<path d="M19 79 Q21 57 38 53 L50 72 L62 53 Q79 57 81 79 Q50 101 19 79Z" fill="#85898c"/>
+<path d="M39 55 Q29 64 31 74 Q32 81 39 81 M61 55 Q71 64 69 74 Q68 81 61 81" fill="none" stroke="#fff" stroke-width="2.6"/>
+<circle cx="39" cy="81" r="3" fill="#fff"/><circle cx="61" cy="81" r="3" fill="#fff"/>
+<path d="M50 69 V84 M43 76.5 H57" stroke="#fff" stroke-width="3"/>
+</svg></div>
+<div class="name">AVAILABLE</div>
+<div class="qualification">AWAITING MEDICAL EXPERT</div>
+</article>`;
+}
+}
+grid.innerHTML=html;
+}catch(e){
+count.textContent='Directory temporarily unavailable';
+grid.innerHTML='<p style="color:#d8ad5b">Unable to load the directory. Please refresh.</p>';
+console.error(e);
+}
+})();
+</script>
+</body>
+</html>
