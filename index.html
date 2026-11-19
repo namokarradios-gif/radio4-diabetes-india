@@ -1443,8 +1443,9 @@ function updateDoctorProfile(doctorId) {
     const stateSelect = expertsSection.querySelector("#expertState");
     const doctorLabel = expertsSection.querySelector('label[for="expertSelect"]');
     const doctorSelect = expertsSection.querySelector("#expertSelect");
+    const directoryLink = expertsSection.querySelector("#medicalExpertsDirectoryLink");
 
-    [stateLabel, stateSelect, doctorLabel, doctorSelect].forEach(el => {
+    [stateLabel, stateSelect, doctorLabel, doctorSelect, directoryLink].forEach(el => {
       if (el) el.hidden = !!profile;
     });
   }
@@ -1948,6 +1949,10 @@ html,body{
 }
 #medicalExpertsDirectoryLink:hover{
   background:#242018;border-color:#e0b866;
+}
+
+#medicalExpertsDirectoryLink[hidden]{
+  display:none !important;
 }
 #doctorProfilePanel{
   margin:24px auto 0;
