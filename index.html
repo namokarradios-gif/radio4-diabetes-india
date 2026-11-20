@@ -1102,22 +1102,31 @@ html,body{
 <section id="medicalExpertsHome">
   <div class="experts-inner">
     <h2>Diabetes India Medical Experts</h2>
-    <label for="expertState">Select State Live on Radio</label>
+    <label for="expertState">Select States Live on Radio</label>
     <select id="expertState">
       <option value="">All States</option>
     </select>
-    <label for="expertSelect">Name of Medical Expert Live on Radio</label>
+    <label for="expertSelect">Select Medical Experts Live on Radio</label>
     <select id="expertSelect">
       <option value="">Select Medical Expert</option>
     </select>
-    <a id="medicalExpertsDirectoryLink" href="/medical-experts/">OUR MEDICAL EXPERTS DIRECTORY</a>
     <div id="doctorProfilePanel" hidden aria-live="polite">
       <div class="doctor-profile-inner">
-        <div class="doctor-profile-eyebrow">DIABETES INDIA RADIO</div>
-        <h3 id="doctorProfileName"></h3>
-        <div id="doctorProfileQualification"></div>
-        <div id="doctorProfileDetails"></div>
-        <div id="doctorProfileId"></div>
+        <svg class="directory-doctor-icon" viewBox="0 0 100 100" aria-hidden="true">
+          <circle cx="50" cy="50" r="48" fill="#090a0b" stroke="#d8ad5b" stroke-width="2"/>
+          <circle cx="50" cy="29" r="13" fill="#85898c"/>
+          <path d="M19 79 Q21 57 38 53 L50 72 L62 53 Q79 57 81 79 Q50 101 19 79Z" fill="#85898c"/>
+          <path d="M39 55 Q29 64 31 74 Q32 81 39 81 M61 55 Q71 64 69 74 Q68 81 61 81" fill="none" stroke="#fff" stroke-width="2.6"/>
+          <circle cx="39" cy="81" r="3" fill="#fff"/><circle cx="61" cy="81" r="3" fill="#fff"/>
+          <path d="M50 69 V84 M43 76.5 H57" stroke="#fff" stroke-width="3"/>
+        </svg>
+        <div class="doctor-profile-content">
+          <div class="doctor-profile-eyebrow">DIABETES INDIA RADIO</div>
+          <h3 id="doctorProfileName"></h3>
+          <div id="doctorProfileQualification"></div>
+          <div id="doctorProfileDetails"></div>
+          <div id="doctorProfileId"></div>
+        </div>
       </div>
     </div>
 
@@ -1125,86 +1134,151 @@ html,body{
 </section>
 <script>
 (async function(){
-  const doctorSelect=document.getElementById("expertSelect");
-  const stateSelect=document.getElementById("expertState");
-  let doctors=[];
-  try{
-    const response=await fetch("/doctors.json",{cache:"no-store"});
-    if(!response.ok) throw new Error("Directory unavailable");
-    const data=await response.json();
-    doctors=data.doctors;
-    if(!Array.isArray(doctors)) throw new Error("Invalid directory data");
+  const doctorSelect = document.getElementById("expertSelect");
+  const stateSelect = document.getElementById("expertState");
+  const normalise = value => (value || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+  const identityKey = (state, registration) =>
+    normalise(state) + "|" + normalise(registration);
+  const temporaryKey = (item, name) => {
+    const state = normalise(item.state);
+    const registration = normalise(item.registration_number);
+    return "TEMP|" + state + "|" + (registration || normalise(name));
+  };
 
-    const sorted=[...doctors].sort((a,b)=>
-      a.doctor_name.localeCompare(b.doctor_name,undefined,{sensitivity:"base"})
+  try {
+    const [doctorsResponse, recordingsResponse, profilesResponse] = await Promise.all([
+      fetch("/doctors.json?t=" + Date.now(), {cache:"no-store"}),
+      fetch("/recordings.json?t=" + Date.now(), {cache:"no-store"}),
+      fetch("/doctor_profiles.json?t=" + Date.now(), {cache:"no-store"})
+    ]);
+
+    if (!doctorsResponse.ok || !recordingsResponse.ok || !profilesResponse.ok)
+      throw new Error("Doctor or recording data unavailable");
+
+    const doctorsData = await doctorsResponse.json();
+    const recordingsData = await recordingsResponse.json();
+    const profilesData = await profilesResponse.json();
+
+    const doctors = doctorsData.doctors;
+    const recordings = recordingsData.recordings;
+    const profiles = profilesData.doctors;
+
+    if (!Array.isArray(doctors) || !Array.isArray(recordings) || !profiles)
+      throw new Error("Invalid doctor or recording data");
+
+    const doctorByIdentity = new Map();
+    doctors.forEach(d => {
+      const key = identityKey(d.state, d.registration_number);
+      if (key !== "|") doctorByIdentity.set(key, d);
+    });
+
+    const recordingDoctorIds = {};
+    Object.entries(profiles).forEach(([doctorId, profile]) => {
+      (profile.recordings || []).forEach(recording => {
+        recordingDoctorIds[recording.remote_name] = doctorId;
+      });
+    });
+
+    const active = new Map();
+
+    recordings.forEach(item => {
+      const filename = String(item.remote_name || "");
+      const match = filename.replace(/\.mp3$/i, "").replace(/ \d{8} \d{6}$/, "")
+        .match(/^Talk by (.+?) on (.+)$/i);
+      if (!match) return;
+
+      const name = item.doctor_name || match[1].trim();
+      const doctorId = recordingDoctorIds[filename] ||
+        doctorByIdentity.get(identityKey(item.state, item.registration_number))?.doctor_id || "";
+      const profile = doctorId ? profiles[doctorId] : null;
+      const registered = doctorId ? doctors.find(d => d.doctor_id === doctorId) : null;
+      const key = doctorId || temporaryKey(item, name);
+
+      if (!active.has(key)) {
+        active.set(key, {
+          key,
+          doctor_id: doctorId,
+          doctor_name: profile?.doctor_name || registered?.doctor_name || name,
+          qualification: profile?.qualification || registered?.qualification || item.qualification || "",
+          state: profile?.state || registered?.state || item.state || "Other / Not specified"
+        });
+      }
+    });
+
+    const sorted = [...active.values()].sort((a,b) =>
+      a.doctor_name.localeCompare(b.doctor_name, undefined, {sensitivity:"base"})
     );
 
-    [...new Set(sorted.map(d=>d.state.trim()))]
-      .sort((a,b)=>a.localeCompare(b))
-      .forEach(state=>{
-        const option=document.createElement("option");
-        option.value=state;
-        option.textContent=state;
+    [...new Set(sorted.map(d => d.state.trim()))]
+      .sort((a,b) => a.localeCompare(b))
+      .forEach(state => {
+        const option = document.createElement("option");
+        option.value = state;
+        option.textContent = state;
         stateSelect.appendChild(option);
       });
 
-    function populateDoctors(){
-      const selected=stateSelect.value;
+    function populateDoctors() {
+      const selected = stateSelect.value;
       doctorSelect.replaceChildren();
-      const placeholder=document.createElement("option");
-      placeholder.value="";
-      placeholder.textContent="Select Medical Expert";
+      const placeholder = document.createElement("option");
+      placeholder.value = "";
+      placeholder.textContent = "Select Medical Expert";
       doctorSelect.appendChild(placeholder);
 
-      sorted.filter(d=>!selected || d.state.trim()===selected)
-        .forEach(d=>{
-          const option=document.createElement("option");
-          option.value=d.doctor_id;
-          option.textContent=d.doctor_name;
+      sorted.filter(d => !selected || d.state.trim() === selected)
+        .forEach(d => {
+          const option = document.createElement("option");
+          option.value = d.key;
+          option.textContent = d.qualification ? `${d.doctor_name} — ${d.qualification}` : d.doctor_name;
           doctorSelect.appendChild(option);
         });
     }
 
-    stateSelect.addEventListener("change",()=>{
+    stateSelect.addEventListener("change", () => {
       populateDoctors();
       const url = new URL(window.location.href);
       url.searchParams.delete("doctor");
       history.replaceState({}, "", url);
       window.dispatchEvent(new CustomEvent("radio4:doctorchange", {
-        detail: { doctor_id: "" }
+        detail: {doctor_id: ""}
       }));
     });
-    function selectDoctorFromUrl(){
-      const doctorId = new URLSearchParams(window.location.search).get("doctor") || "";
-      const doctor = sorted.find(d => d.doctor_id === doctorId);
+
+    function selectDoctorFromUrl() {
+      const selectedKey = new URLSearchParams(window.location.search).get("doctor") || "";
+      const doctor = sorted.find(d => d.key === selectedKey);
+
       if (doctor) {
         const stateExists = [...stateSelect.options].some(o => o.value === doctor.state.trim());
         stateSelect.value = stateExists ? doctor.state.trim() : "";
         populateDoctors();
-        doctorSelect.value = doctor.doctor_id;
+        doctorSelect.value = doctor.key;
       } else {
         doctorSelect.value = "";
       }
+
       window.dispatchEvent(new CustomEvent("radio4:doctorchange", {
-        detail: { doctor_id: doctor ? doctor.doctor_id : "" }
+        detail: {doctor_id: doctor ? doctor.key : ""}
       }));
     }
 
-    doctorSelect.addEventListener("change",()=>{
-      const doctorId = doctorSelect.value;
+    doctorSelect.addEventListener("change", () => {
+      const key = doctorSelect.value;
       const url = new URL(window.location.href);
-      if (doctorId) url.searchParams.set("doctor", doctorId);
+      if (key) url.searchParams.set("doctor", key);
       else url.searchParams.delete("doctor");
       history.pushState({}, "", url);
       selectDoctorFromUrl();
     });
 
     window.addEventListener("popstate", selectDoctorFromUrl);
-
     populateDoctors();
     selectDoctorFromUrl();
-  }catch(error){
-    doctorSelect.innerHTML='<option value="">Unable to load Medical Experts</option>';
+
+    console.log("Live on Radio dropdown entries:", sorted.length);
+  } catch(error) {
+    doctorSelect.innerHTML = '<option value="">Unable to load Medical Experts</option>';
     console.error(error);
   }
 })();
@@ -1273,7 +1347,7 @@ function render() {
     (document.getElementById("expertState")?.value || "").trim().toLowerCase();
 
   const filtered = allRecordings.filter(item =>
-    (!activeDoctorId || item.doctor_id === activeDoctorId) &&
+    (!activeDoctorId || item.selection_key === activeDoctorId) &&
     (!selectedState || (item.state || "").trim().toLowerCase() === selectedState) &&
     (
       item.doctor.toLowerCase().includes(query) ||
@@ -1432,40 +1506,48 @@ function render() {
 function updateDoctorProfile(doctorId) {
   activeDoctorId = doctorId || "";
   const panel = document.getElementById("doctorProfilePanel");
-  const profile = doctorProfiles[activeDoctorId];
+  const profile = doctorProfiles[activeDoctorId] || null;
+  const temporaryRecording = !profile && activeDoctorId
+    ? allRecordings.find(item => item.selection_key === activeDoctorId)
+    : null;
+  const selectedSpeaker = profile || temporaryRecording;
 
   if (!panel) return;
 
   const expertsSection = document.getElementById("medicalExpertsHome");
   if (expertsSection) {
-    const heading = expertsSection.querySelector("h2");
     const stateLabel = expertsSection.querySelector('label[for="expertState"]');
     const stateSelect = expertsSection.querySelector("#expertState");
     const doctorLabel = expertsSection.querySelector('label[for="expertSelect"]');
     const doctorSelect = expertsSection.querySelector("#expertSelect");
-    const directoryLink = expertsSection.querySelector("#medicalExpertsDirectoryLink");
 
-    [stateLabel, stateSelect, doctorLabel, doctorSelect, directoryLink].forEach(el => {
-      if (el) el.hidden = !!profile;
+    [stateLabel, stateSelect, doctorLabel, doctorSelect].forEach(el => {
+      if (el) el.hidden = !!selectedSpeaker;
     });
   }
 
-  backToRadioButton.textContent = profile ? "Home Page" : "↑ Back to Radio";
+  backToRadioButton.textContent = selectedSpeaker ? "Home Page" : "↑ Back to Radio";
 
-  if (!profile) {
+  if (!selectedSpeaker) {
     panel.hidden = true;
     visibleLimit = PAGE_SIZE;
     render();
     return;
   }
 
-  document.getElementById("doctorProfileName").textContent = profile.doctor_name || "";
-  document.getElementById("doctorProfileQualification").textContent = profile.qualification || "";
+  document.getElementById("doctorProfileName").textContent =
+    profile?.doctor_name || temporaryRecording?.doctor || "";
+  document.getElementById("doctorProfileQualification").textContent =
+    profile?.qualification || temporaryRecording?.qualification || "";
   document.getElementById("doctorProfileDetails").textContent = [
-    profile.state ? "State: " + profile.state : "",
-    profile.registration_number ? "Medical Registration Number: " + profile.registration_number : ""
+    (profile?.state || temporaryRecording?.state)
+      ? "State: " + (profile?.state || temporaryRecording.state) : "",
+    (profile?.registration_number || temporaryRecording?.registration_number)
+      ? "Medical Registration Number: " +
+        (profile?.registration_number || temporaryRecording.registration_number) : ""
   ].filter(Boolean).join(" | ");
-  document.getElementById("doctorProfileId").textContent = "DOCTOR ID: " + profile.doctor_id;
+  document.getElementById("doctorProfileId").textContent =
+    profile?.doctor_id ? "DOCTOR ID: " + profile.doctor_id : "";
   panel.hidden = false;
   visibleLimit = PAGE_SIZE;
   render();
@@ -1482,15 +1564,25 @@ async function loadRecordings() {
 
     const data = await response.json();
 
-    try {
-      const profilesResponse = await fetch("doctor_profiles.json?t=" + Date.now());
-      if (profilesResponse.ok) {
-        const profilesData = await profilesResponse.json();
-        doctorProfiles = profilesData.doctors || {};
-      }
-    } catch (profileError) {
-      console.warn("Doctor ID mapping unavailable:", profileError);
-    }
+    const [profilesResponse, doctorsResponse] = await Promise.all([
+      fetch("doctor_profiles.json?t=" + Date.now()),
+      fetch("doctors.json?t=" + Date.now())
+    ]);
+    if (!profilesResponse.ok || !doctorsResponse.ok)
+      throw new Error("Doctor identity data unavailable");
+
+    const profilesData = await profilesResponse.json();
+    const doctorsData = await doctorsResponse.json();
+    doctorProfiles = profilesData.doctors || {};
+
+    const normalise = value => (value || "").toLowerCase().replace(/[^a-z0-9]/g, "");
+    const identityKey = (state, registration) =>
+      normalise(state) + "|" + normalise(registration);
+    const doctorByIdentity = new Map();
+    (doctorsData.doctors || []).forEach(d => {
+      const key = identityKey(d.state, d.registration_number);
+      if (key !== "|") doctorByIdentity.set(key, d.doctor_id);
+    });
 
     const recordingDoctorIds = {};
     Object.entries(doctorProfiles).forEach(([doctorId, profile]) => {
@@ -1506,7 +1598,9 @@ async function loadRecordings() {
 
         return {
           ...details,
-          doctor_id: recordingDoctorIds[item.remote_name] || "",
+          doctor_id: recordingDoctorIds[item.remote_name] ||
+            doctorByIdentity.get(identityKey(item.state, item.registration_number)) || "",
+          selection_key: "",
           doctor: item.doctor_name || details.doctor,
           remote_name: item.remote_name,
           qualification: item.qualification || "",
@@ -1518,6 +1612,13 @@ async function loadRecordings() {
         };
       })
       .filter(Boolean)
+      .map(item => ({
+        ...item,
+        selection_key: item.doctor_id ||
+          ("TEMP|" + (item.state || "").toLowerCase().replace(/[^a-z0-9]/g, "") +
+           "|" + ((item.registration_number || "").toLowerCase().replace(/[^a-z0-9]/g, "") ||
+                  item.doctor.toLowerCase().replace(/[^a-z0-9]/g, "")))
+      }))
       .sort((a,b) => b.date.localeCompare(a.date));
 
     const suggestions = talkSuggestions;
@@ -1940,19 +2041,9 @@ html,body{
 #medicalExpertsHome select:focus{
   outline:1px solid #e0b866;border-color:#e0b866;
 }
-#medicalExpertsDirectoryLink{
-  display:block;margin:20px auto 0;padding:14px 18px;
-  max-width:420px;text-align:center;text-decoration:none;
-  border:1px solid #806333;border-radius:9px;
-  background:#151411;color:#e0b866;font-weight:700;
-  letter-spacing:.5px;font-size:14px;
-}
-#medicalExpertsDirectoryLink:hover{
-  background:#242018;border-color:#e0b866;
-}
-
-#medicalExpertsDirectoryLink[hidden]{
-  display:none !important;
+#medicalExpertsHome select option{
+  background:#151411;
+  color:#fff0cf;
 }
 #doctorProfilePanel{
   margin:24px auto 0;
@@ -1961,20 +2052,71 @@ html,body{
   border:1px solid #806333;
   border-radius:12px;
   background:linear-gradient(145deg,#242428,#111114 65%,#09090a);
-  text-align:center;
+  text-align:left;
 }
 #doctorProfilePanel[hidden]{display:none}
+.doctor-profile-inner{
+  display:flex;
+  align-items:center;
+  justify-content:flex-start;
+  gap:20px;
+}
+.directory-doctor-icon{
+  width:68px;
+  height:68px;
+  flex:0 0 68px;
+}
+.doctor-profile-content{
+  flex:1;
+  min-width:0;
+  text-align:left;
+}
 .doctor-profile-eyebrow{
   color:#d8ad5b;font-size:11px;letter-spacing:2px;
   margin-bottom:10px;font-weight:700
 }
 #doctorProfileName{
   color:#f1d99b;font:700 clamp(22px,4vw,28px) Georgia,serif;
-  margin:0 0 10px
+  margin:0 0 10px;
+  text-align:left;
 }
 #doctorProfileQualification{color:#fff0cf;font-size:15px;margin-bottom:9px}
 #doctorProfileDetails{color:#d2c9b9;font-size:13px;line-height:1.8}
 #doctorProfileId{color:#bda16b;font-size:11px;margin-top:10px;letter-spacing:1px}
+
+@media (max-width:600px){
+  #doctorProfilePanel{
+    padding:16px 12px;
+    margin:18px 10px 0;
+    box-sizing:border-box;
+  }
+  .doctor-profile-inner{
+    gap:12px;
+    align-items:flex-start;
+  }
+  .directory-doctor-icon{
+    width:56px;
+    height:56px;
+    flex:0 0 56px;
+  }
+  .doctor-profile-content{
+    flex:1;
+    min-width:0;
+    overflow-wrap:anywhere;
+  }
+  #doctorProfileName{
+    font-size:clamp(18px,5vw,22px);
+    line-height:1.2;
+    overflow-wrap:anywhere;
+  }
+  #doctorProfileQualification,
+  #doctorProfileDetails,
+  #doctorProfileId{
+    overflow-wrap:anywhere;
+    line-height:1.5;
+  }
+}
+
 #ondemandSection #search,
 #ondemandSection .sort-label,
 #ondemandSection .sort-select{
