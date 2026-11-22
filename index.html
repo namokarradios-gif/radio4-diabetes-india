@@ -1135,10 +1135,44 @@ html,body{
     <select id="expertState">
       <option value="">All States</option>
     </select>
+    <button type="button" id="openStatePicker">SELECT STATE / UNION TERRITORY</button>
+
+    <div id="statePickerModal" hidden>
+      <div class="doctor-picker-dialog" role="dialog" aria-modal="true" aria-labelledby="statePickerTitle">
+        <div class="doctor-picker-header">
+          <div>
+            <h3 id="statePickerTitle">SELECT YOUR STATE</h3>
+            <p>Diabetes India Medical Experts</p>
+          </div>
+          <button type="button" id="closeStatePicker" aria-label="Close">×</button>
+        </div>
+        <div id="statePickerResults" role="listbox" aria-label="States and Union Territories"></div>
+      </div>
+    </div>
+
     <label for="expertSelect">Select Medical Experts Live on Radio</label>
     <select id="expertSelect">
       <option value="">Select Medical Expert</option>
     </select>
+
+    <button type="button" id="openDoctorPicker">SELECT A MEDICAL EXPERT</button>
+
+    <div id="doctorPickerModal" hidden>
+      <div class="doctor-picker-dialog" role="dialog" aria-modal="true" aria-labelledby="doctorPickerTitle">
+        <div class="doctor-picker-header">
+          <div>
+            <h3 id="doctorPickerTitle">SELECT YOUR DOCTOR</h3>
+            <p>Diabetes India Medical Experts</p>
+          </div>
+          <button type="button" id="closeDoctorPicker" aria-label="Close">×</button>
+        </div>
+        <label for="doctorPickerSearch">SEARCH DOCTOR BY NAME</label>
+        <input id="doctorPickerSearch" type="search" placeholder="Type doctor's name..." autocomplete="off">
+        <div id="doctorPickerCount" aria-live="polite"></div>
+        <div id="doctorPickerResults" role="listbox" aria-label="Medical experts"></div>
+      </div>
+    </div>
+
     <div id="doctorProfilePanel" hidden aria-live="polite">
       <div class="doctor-profile-inner">
         <svg class="directory-doctor-icon" viewBox="0 0 100 100" aria-hidden="true">
@@ -1272,6 +1306,133 @@ html,body{
           doctorSelect.appendChild(option);
         });
     }
+
+    const pickerModal = document.getElementById("doctorPickerModal");
+    const pickerSearch = document.getElementById("doctorPickerSearch");
+    const pickerResults = document.getElementById("doctorPickerResults");
+    const pickerCount = document.getElementById("doctorPickerCount");
+
+    const statePickerModal = document.getElementById("statePickerModal");
+    const statePickerResults = document.getElementById("statePickerResults");
+    const openStatePickerButton = document.getElementById("openStatePicker");
+
+    function renderStatePicker() {
+      statePickerResults.replaceChildren();
+
+      [...stateSelect.options].forEach(option => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "doctor-picker-row";
+        button.setAttribute("role", "option");
+        button.setAttribute("aria-selected", String(option.value === stateSelect.value));
+
+        const name = document.createElement("span");
+        name.className = "doctor-picker-name";
+        name.textContent = option.value || "All States";
+        button.appendChild(name);
+
+        button.addEventListener("click", () => {
+          stateSelect.value = option.value;
+          closeStatePicker();
+          stateSelect.dispatchEvent(new Event("change", {bubbles:true}));
+        });
+
+        statePickerResults.appendChild(button);
+      });
+    }
+
+    function openStatePicker() {
+      renderStatePicker();
+      statePickerModal.hidden = false;
+      document.body.classList.add("doctor-picker-open");
+    }
+
+    function closeStatePicker() {
+      statePickerModal.hidden = true;
+      document.body.classList.remove("doctor-picker-open");
+      if (!openStatePickerButton.hidden) openStatePickerButton.focus();
+    }
+
+    openStatePickerButton.addEventListener("click", openStatePicker);
+    document.getElementById("closeStatePicker").addEventListener("click", closeStatePicker);
+    statePickerModal.addEventListener("click", event => {
+      if (event.target === statePickerModal) closeStatePicker();
+    });
+    document.addEventListener("keydown", event => {
+      if (event.key === "Escape" && !statePickerModal.hidden) closeStatePicker();
+    });
+
+    function renderDoctorPicker() {
+      const state = stateSelect.value;
+      const query = pickerSearch.value.trim().toLocaleLowerCase();
+      const matches = sorted.filter(d =>
+        (!state || d.state.trim() === state) &&
+        (d.doctor_name || "").toLocaleLowerCase().includes(query)
+      );
+
+      pickerResults.replaceChildren();
+      pickerCount.textContent = matches.length + " medical expert" + (matches.length === 1 ? "" : "s");
+
+      if (!matches.length) {
+        const empty = document.createElement("div");
+        empty.className = "doctor-picker-empty";
+        empty.textContent = "No doctors found. Try another doctor's name.";
+        pickerResults.appendChild(empty);
+        return;
+      }
+
+      matches.forEach(d => {
+        const button = document.createElement("button");
+        button.type = "button";
+        button.className = "doctor-picker-row";
+        button.setAttribute("role", "option");
+        const name = document.createElement("span");
+        name.className = "doctor-picker-name";
+        name.textContent = d.doctor_name || "Medical Expert";
+        button.appendChild(name);
+        if (d.qualification) {
+          const qualification = document.createElement("span");
+          qualification.className = "doctor-picker-qualification";
+          qualification.textContent = d.qualification;
+          button.appendChild(qualification);
+        }
+        button.addEventListener("click", () => {
+          stateSelect.value = d.state.trim();
+          stateSelect.dispatchEvent(new Event("change", {bubbles:true}));
+          doctorSelect.value = d.key;
+          closeDoctorPicker();
+          doctorSelect.dispatchEvent(new Event("change", {bubbles:true}));
+        });
+        pickerResults.appendChild(button);
+      });
+    }
+
+    function openDoctorPicker() {
+      pickerSearch.value = "";
+      renderDoctorPicker();
+      pickerModal.hidden = false;
+      document.body.classList.add("doctor-picker-open");
+      // Do not auto-focus: mobile keyboards should open only on user tap.
+    }
+
+    function closeDoctorPicker() {
+      pickerModal.hidden = true;
+      document.body.classList.remove("doctor-picker-open");
+      document.getElementById("openDoctorPicker").focus();
+    }
+
+    document.getElementById("openDoctorPicker").addEventListener("click", openDoctorPicker);
+    document.getElementById("closeDoctorPicker").addEventListener("click", closeDoctorPicker);
+    stateSelect.addEventListener("change", () => {
+      if (!pickerModal.hidden) renderDoctorPicker();
+    });
+    pickerSearch.addEventListener("input", renderDoctorPicker);
+    pickerModal.addEventListener("click", event => {
+      if (event.target === pickerModal) closeDoctorPicker();
+    });
+    document.addEventListener("keydown", event => {
+      if (event.key === "Escape" && !pickerModal.hidden) closeDoctorPicker();
+    });
 
     stateSelect.addEventListener("change", () => {
       populateDoctors();
@@ -1584,7 +1745,9 @@ function updateDoctorProfile(doctorId) {
     const doctorLabel = expertsSection.querySelector('label[for="expertSelect"]');
     const doctorSelect = expertsSection.querySelector("#expertSelect");
 
-    [stateLabel, stateSelect, doctorLabel, doctorSelect].forEach(el => {
+    const doctorPickerButton = document.getElementById("openDoctorPicker");
+    const statePickerButton = document.getElementById("openStatePicker");
+    [stateLabel, stateSelect, statePickerButton, doctorLabel, doctorSelect, doctorPickerButton].forEach(el => {
       if (el) el.hidden = !!selectedSpeaker;
     });
   }
@@ -2369,12 +2532,13 @@ html,body{
   font-weight:700;margin:15px 0 8px;
 }
 #medicalExpertsHome select{
-  display:block;width:100%;padding:14px 15px;
-  border:1px solid #806333;border-radius:9px;
-  background:#151411;color:#fff0cf;font-size:15px;
+  box-sizing:border-box;display:block;width:100%;min-height:58px;
+  padding:16px;border:1px solid #b88e45;border-radius:10px;
+  background:#151411;color:#fff;font-size:16px;
+  font-weight:700;letter-spacing:.5px;
 }
 #medicalExpertsHome select:focus{
-  outline:1px solid #e0b866;border-color:#e0b866;
+  outline:2px solid #e0b866;outline-offset:3px;border-color:#e0b866;
 }
 #medicalExpertsHome select option{
   background:#151411;
@@ -2470,6 +2634,91 @@ html,body{
 }
 #publicHealthDisclaimer p{
   margin:0;font:13px/1.7 Arial,Helvetica,sans-serif;
+}
+</style>
+
+
+<style id="doctor-picker-fullscreen-style">
+#medicalExpertsHome #expertSelect,
+#medicalExpertsHome label[for="expertSelect"]{display:none!important}
+#openDoctorPicker[hidden],
+#openStatePicker[hidden]{display:none!important}
+#medicalExpertsHome #expertState{display:none!important}
+#openStatePicker{
+  display:block;width:100%;min-height:58px;margin:20px 0 12px;padding:16px;
+  border:1px solid #b88e45;border-radius:10px;background:#151411;
+  color:#fff;font-size:16px;font-weight:700;letter-spacing:.5px;cursor:pointer;
+}
+#statePickerModal[hidden]{display:none!important}
+#statePickerModal{
+  position:fixed;inset:0;z-index:100001;background:#050608;
+  display:flex;align-items:center;justify-content:center;padding:0;
+}
+#statePickerResults{
+  flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;
+  border-top:1px solid #806333;
+}
+#statePickerResults .doctor-picker-row{min-height:68px}
+#openStatePicker:focus-visible,#statePickerModal button:focus-visible{
+  outline:2px solid #e0b866;outline-offset:3px;
+}
+#openDoctorPicker{
+  display:block;width:100%;min-height:58px;margin:20px 0 12px;padding:16px;
+  border:1px solid #b88e45;border-radius:10px;background:#151411;
+  color:#fff;font-size:16px;font-weight:700;letter-spacing:.5px;cursor:pointer;
+}
+#openDoctorPicker:focus-visible,#doctorPickerModal button:focus-visible,
+#doctorPickerModal input:focus-visible,#doctorPickerModal select:focus-visible{
+  outline:2px solid #e0b866;outline-offset:3px;
+}
+#doctorPickerModal[hidden]{display:none!important}
+#doctorPickerModal{
+  position:fixed;inset:0;z-index:100000;background:#050608;
+  display:flex;align-items:center;justify-content:center;padding:0;
+}
+.doctor-picker-dialog{
+  box-sizing:border-box;width:min(780px,100%);height:100dvh;max-height:100dvh;
+  display:flex;flex-direction:column;overflow:hidden;padding:22px 20px 18px;
+  background:#08090b;border:1px solid #806333;color:#fff;
+}
+.doctor-picker-header{display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:18px}
+.doctor-picker-header h3{margin:0;color:#fff;font-size:22px;letter-spacing:.5px}
+.doctor-picker-header p{margin:6px 0 0;color:#fff;font-size:13px}
+#closeDoctorPicker,
+#closeStatePicker{
+  flex:0 0 46px;width:46px;height:46px;display:flex;
+  align-items:center;justify-content:center;
+  border:1px solid #806333;border-radius:50%;
+  background:#151411;color:#fff;font-size:30px;line-height:1;
+  padding:0;cursor:pointer;
+}
+#doctorPickerModal label{display:block;margin:12px 0 8px;color:#fff;font-size:14px;font-weight:700}
+#doctorPickerState,#doctorPickerSearch{
+  box-sizing:border-box;width:100%;min-height:54px;padding:14px 15px;
+  border:1px solid #806333;border-radius:9px;background:#151411;color:#fff;
+  font-size:16px;
+}
+#doctorPickerState option{background:#151411;color:#fff}
+#doctorPickerCount{padding:14px 2px 10px;color:#fff;font-size:13px}
+#doctorPickerResults{flex:1;min-height:0;overflow-y:auto;overscroll-behavior:contain;border-top:1px solid #806333}
+.doctor-picker-row{
+  display:flex;width:100%;min-height:68px;flex-direction:column;align-items:flex-start;
+  justify-content:center;gap:5px;padding:13px 12px;border:0;border-bottom:1px solid #393126;
+  background:transparent;color:#fff;text-align:left;cursor:pointer;
+}
+.doctor-picker-row:active{background:#292116}
+.doctor-picker-name{color:#fff;font-size:17px;font-weight:700}
+.doctor-picker-qualification{color:#fff;font-size:13px}
+.doctor-picker-empty{padding:28px 12px;color:#fff;text-align:center;font-size:15px}
+body.doctor-picker-open{overflow:hidden}
+@media(min-width:700px){
+  #doctorPickerModal,#statePickerModal{background:rgba(0,0,0,.88);padding:24px}
+  .doctor-picker-dialog{height:min(850px,calc(100dvh - 48px));border-radius:16px}
+}
+@media(max-width:600px){
+  .doctor-picker-dialog{padding:18px 15px 12px;border:0}
+  .doctor-picker-header h3{font-size:20px}
+  .doctor-picker-row{min-height:74px;padding:15px 12px}
 }
 </style>
 
