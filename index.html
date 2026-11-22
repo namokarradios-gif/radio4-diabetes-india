@@ -820,6 +820,35 @@ button:focus:not(:focus-visible), .ondemand-panel:focus:not(:focus-visible),
   #ondemandSection { padding:22px 12px 28px; }
 }
 
+
+/* Doctor On-Demand LED: override Centova metadata visibility only during doctor playback. */
+.led-panel.is-playing .now-playing.doctor-onair-active > .cc_streaminfo{
+  display:none!important;
+}
+.led-panel.is-playing .now-playing.doctor-onair-active > .doctor-now-playing{
+  display:block!important;
+  width:100%!important;
+  max-width:100%!important;
+  box-sizing:border-box!important;
+  padding:0 4px!important;
+  color:#e5f8ff!important;
+  text-align:center!important;
+  white-space:normal!important;
+  overflow-wrap:anywhere!important;
+  word-break:normal!important;
+  font:bold clamp(9px,1.82vw,12.6px) "Courier New",monospace!important;
+  line-height:1.2!important;
+  letter-spacing:.3px!important;
+  text-shadow:0 0 8px #41bfff,0 0 18px #168bff!important;
+}
+@media(max-width:480px){
+  .led-panel.is-playing .now-playing.doctor-onair-active > .doctor-now-playing{
+    font-size:clamp(8.4px,2.38vw,11.2px)!important;
+    line-height:1.18!important;
+    letter-spacing:.2px!important;
+  }
+}
+
 </style>
 
 
@@ -1086,7 +1115,7 @@ html,body{
   </svg>
   <span class="gesture-finger">👆</span>
 </div></div>
-<div class="led-panel"><div class="led-top"><span>RADIO 4 • DIGITAL TUNER</span><span id="position">01 / 37</span></div><strong id="station">NATIONAL RADIO</strong><span id="region">DIABETES INDIA RADIO</span><div class="now-playing"><span class="now-playing-label">NOW PLAYING</span><span class="cc_streaminfo" data-type="song" data-username="radio4esi">Loading ...</span></div></div>
+<div class="led-panel"><div class="led-top"><span>RADIO 4 • DIGITAL TUNER</span><span id="position">01 / 37</span></div><strong id="station">NATIONAL RADIO</strong><span id="region">DIABETES INDIA RADIO</span><div class="now-playing"><span class="now-playing-label">NOW PLAYING</span><span class="cc_streaminfo" data-type="song" data-username="radio4esi">Loading ...</span><span id="radio4DoctorNowPlaying" class="doctor-now-playing" style="display:none"></span></div></div>
 <div class="hardware-controls">
   <div class="control-item"><button class="transport play" id="play" aria-label="Play radio">▶</button><span class="control-caption" id="playCaption">PLAY</span></div>
   <div class="control-item"><button class="knob-button" id="next" aria-label="Next station">+</button><span class="control-caption">TUNER +</span></div>
@@ -1200,7 +1229,8 @@ html,body{
           doctor_id: doctorId,
           doctor_name: profile?.doctor_name || registered?.doctor_name || name,
           qualification: profile?.qualification || registered?.qualification || item.qualification || "",
-          state: profile?.state || registered?.state || item.state || "Other / Not specified"
+          state: profile?.state || registered?.state || item.state || "Other / Not specified",
+          registration_number: profile?.registration_number || registered?.registration_number || item.registration_number || ""
         });
       }
     });
@@ -1208,6 +1238,14 @@ html,body{
     const sorted = [...active.values()].sort((a,b) =>
       a.doctor_name.localeCompare(b.doctor_name, undefined, {sensitivity:"base"})
     );
+
+    function publicDoctorKey(doctor) {
+      const name = (doctor.doctor_name || "")
+        .toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+      const registration = (doctor.registration_number || "")
+        .toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+      return registration ? name + "-" + registration : name;
+    }
 
     [...new Set(sorted.map(d => d.state.trim()))]
       .sort((a,b) => a.localeCompare(b))
@@ -1240,14 +1278,18 @@ html,body{
       const url = new URL(window.location.href);
       url.searchParams.delete("doctor");
       history.replaceState({}, "", url);
+      window.radio4SelectedDoctor = {doctor_id: "", state: ""};
       window.dispatchEvent(new CustomEvent("radio4:doctorchange", {
-        detail: {doctor_id: ""}
+        detail: window.radio4SelectedDoctor
       }));
     });
 
     function selectDoctorFromUrl() {
       const selectedKey = new URLSearchParams(window.location.search).get("doctor") || "";
-      const doctor = sorted.find(d => d.key === selectedKey);
+      const doctor = sorted.find(d =>
+        d.key === selectedKey ||
+        (!d.doctor_id && publicDoctorKey(d) === selectedKey)
+      );
 
       if (doctor) {
         const stateExists = [...stateSelect.options].some(o => o.value === doctor.state.trim());
@@ -1258,16 +1300,27 @@ html,body{
         doctorSelect.value = "";
       }
 
+      window.radio4SelectedDoctor = {
+        doctor_id: doctor ? doctor.key : "",
+        state: doctor ? (doctor.state || "").trim() : ""
+      };
       window.dispatchEvent(new CustomEvent("radio4:doctorchange", {
-        detail: {doctor_id: doctor ? doctor.key : ""}
+        detail: window.radio4SelectedDoctor
       }));
     }
 
     doctorSelect.addEventListener("change", () => {
       const key = doctorSelect.value;
+      const selectedDoctor = sorted.find(d => d.key === key);
       const url = new URL(window.location.href);
-      if (key) url.searchParams.set("doctor", key);
-      else url.searchParams.delete("doctor");
+      if (key) {
+        const publicKey = selectedDoctor && !selectedDoctor.doctor_id
+          ? publicDoctorKey(selectedDoctor)
+          : key;
+        url.searchParams.set("doctor", publicKey);
+      } else {
+        url.searchParams.delete("doctor");
+      }
       history.pushState({}, "", url);
       selectDoctorFromUrl();
     });
@@ -1321,6 +1374,14 @@ const AUDIO_BASE =
 let allRecordings = [];
 let doctorProfiles = {};
 let activeDoctorId = new URLSearchParams(window.location.search).get("doctor") || "";
+
+window.radio4OnDemand = {
+  getActiveDoctorId: () => activeDoctorId,
+  getDoctorRecordings: doctorId => allRecordings
+    .filter(item => item.selection_key === doctorId)
+    .map(item => ({url: item.url, doctor: item.doctor, topic: item.topic, date: item.date}))
+};
+
 let visibleLimit = 10;
 const PAGE_SIZE = 10;
 const sortControl = root.querySelector("#recordingSort");
@@ -1464,6 +1525,8 @@ function render() {
           }
         });
         try {
+          if (typeof window.radio4StopDialerAudio === "function")
+            window.radio4StopDialerAudio();
           await audio.play();
         } catch (error) {
           status.textContent = "UNABLE TO PLAY THIS RECORDING";
@@ -1554,7 +1617,14 @@ function updateDoctorProfile(doctorId) {
 }
 
 window.addEventListener("radio4:doctorchange", event => {
-  updateDoctorProfile(event.detail?.doctor_id || "");
+  window.radio4SelectedDoctor = {
+    doctor_id: event.detail?.doctor_id || "",
+    state: event.detail?.state || ""
+  };
+  updateDoctorProfile(window.radio4SelectedDoctor.doctor_id);
+  window.dispatchEvent(new CustomEvent("radio4:ondemanddoctorupdated", {
+    detail: window.radio4SelectedDoctor
+  }));
 });
 
 async function loadRecordings() {
@@ -1634,6 +1704,7 @@ async function loadRecordings() {
     });
 
     updateDoctorProfile(activeDoctorId);
+    window.dispatchEvent(new CustomEvent("radio4:ondemandready"));
   } catch (error) {
     count.textContent =
       "Unable to load recordings.";
@@ -1647,6 +1718,7 @@ sortControl.addEventListener("change", () => { visibleLimit = PAGE_SIZE; render(
 loadMoreButton.addEventListener("click", () => { visibleLimit += PAGE_SIZE; render(); });
 backToRadioButton.addEventListener("click", () => {
   if (activeDoctorId) {
+    stopAllRadioAudio();
     const homeUrl = new URL(window.location.href);
     homeUrl.searchParams.delete("doctor");
     window.location.href = homeUrl.pathname + homeUrl.search + homeUrl.hash;
@@ -1764,7 +1836,189 @@ function playTuningClick(){
    All 37 are initially assigned the same live URL. Replace each field
    with that station's CentovaCast URL when its feed is created. */
 function getSelectedStreamUrl(){return stations[selected].streamUrl||STREAM_URL;}
+
+/* Separate audio engine for a selected doctor's On-Demand playlist. */
+const doctorLoopAudio = new Audio();
+doctorLoopAudio.preload = "none";
+let doctorLoopPlaylist = [];
+let doctorLoopIndex = 0;
+let doctorLoopDoctorId = "";
+let doctorLoopState = "";
+let doctorLoopWasPlaying = false;
+
+/* Match a doctor's registered state to one of the 37 tuner positions. */
+function normalizeRadioState(value){
+  return String(value || "")
+    .toUpperCase()
+    .replace(/&/g, " AND ")
+    .replace(/[^A-Z0-9]+/g, " ")
+    .trim()
+    .replace(/\s+/g, " ");
+}
+function findDoctorStateStation(stateName){
+  const wanted = normalizeRadioState(stateName);
+  if(!wanted) return -1;
+
+  return stations.findIndex(item => {
+    const candidate = normalizeRadioState(item.name);
+    if(candidate === wanted) return true;
+    if(wanted === "NATIONAL CAPITAL TERRITORY DELHI" && candidate === "DELHI NCT") return true;
+    if(wanted === "DELHI" && candidate === "DELHI NCT") return true;
+    return false;
+  });
+}
+function getSelectedDoctorInfo(){
+  const info = window.radio4SelectedDoctor || {};
+  return {
+    doctorId: String(info.doctor_id || ""),
+    state: String(info.state || ""),
+    stationIndex: findDoctorStateStation(info.state || "")
+  };
+}
+function isSelectedDoctorStation(){
+  const info = getSelectedDoctorInfo();
+  return !!info.doctorId && info.stationIndex > 0 && selected === info.stationIndex;
+}
+
+function getDoctorPlaylist(doctorId){
+  if(!doctorId || !window.radio4OnDemand ||
+     typeof window.radio4OnDemand.getDoctorRecordings !== "function") return [];
+  return window.radio4OnDemand.getDoctorRecordings(doctorId) || [];
+}
+
+/* Doctor On-Demand playback and existing LED integration. */
+const doctorLedText = document.getElementById("radio4DoctorNowPlaying");
+const centovaLedText = document.querySelector('.now-playing > .cc_streaminfo[data-type="song"]');
+
+function showDoctorLed(recording){
+  if(doctorLedText){
+    const topic = recording.topic || "Doctor On-Demand Recording";
+    const doctor = recording.doctor || "Medical Expert";
+    doctorLedText.textContent = topic + "  •  " + doctor;
+    doctorLedText.style.display = "block";
+  }
+  const nowPlayingLed = document.querySelector(".now-playing");
+  if(nowPlayingLed) nowPlayingLed.classList.add("doctor-onair-active");
+  if(centovaLedText) centovaLedText.style.display = "none";
+  setNowPlayingVisible(true);
+}
+function restoreCentovaLed(){
+  const nowPlayingLed = document.querySelector(".now-playing");
+  if(nowPlayingLed) nowPlayingLed.classList.remove("doctor-onair-active");
+  if(doctorLedText) doctorLedText.style.display = "none";
+  if(centovaLedText) centovaLedText.style.display = "";
+  setNowPlayingVisible(!radioStream.paused || !doctorLoopAudio.paused);
+}
+function setDialerPlayingState(playing){
+  playButton.textContent = playing ? "■" : "▶";
+  playButton.classList.toggle("playing", !!playing);
+  document.getElementById("playCaption").textContent = playing ? "STOP" : "PLAY";
+  playButton.setAttribute("aria-label", playing ? "Stop radio" : "Play radio");
+}
+function pauseDoctorLoop(){
+  if(!doctorLoopAudio.paused){
+    doctorLoopWasPlaying = true;
+    doctorLoopAudio.pause();
+  }
+}
+
+function stopDoctorLoop(){
+  if(!doctorLoopAudio.paused) doctorLoopWasPlaying = true;
+  doctorLoopAudio.pause();
+  setDialerPlayingState(false);
+  restoreCentovaLed();
+  setNowPlayingVisible(false);
+}
+async function playDoctorLoopTrack(){
+  if(!doctorLoopPlaylist.length) return;
+  const item = doctorLoopPlaylist[doctorLoopIndex];
+  if(!item || !item.url) return;
+  if(doctorLoopAudio.src !== item.url){
+    doctorLoopAudio.src = item.url;
+    doctorLoopAudio.load();
+  }
+  showDoctorLed(item);
+  try{
+    await doctorLoopAudio.play();
+    setDialerPlayingState(true);
+    doctorLoopWasPlaying = true;
+  }catch(error){
+    setDialerPlayingState(false);
+    setNowPlayingVisible(false);
+    console.error("Doctor On-Demand playback failed:", error);
+  }
+}
+async function startDoctorLoop(resume){
+  if(!doctorLoopPlaylist.length){
+    if(doctorLedText){
+      doctorLedText.textContent = "NO ON-DEMAND RECORDINGS AVAILABLE";
+      doctorLedText.style.display = "block";
+    }
+    if(centovaLedText) centovaLedText.style.display = "none";
+    setNowPlayingVisible(false);
+    setDialerPlayingState(false);
+    return;
+  }
+  if(!resume) doctorLoopIndex = 0;
+  await playDoctorLoopTrack();
+}
+doctorLoopAudio.addEventListener("ended", () => {
+  if(!doctorLoopPlaylist.length) return;
+  doctorLoopIndex = (doctorLoopIndex + 1) % doctorLoopPlaylist.length;
+  playDoctorLoopTrack();
+});
+doctorLoopAudio.addEventListener("playing", () => {
+  const item = doctorLoopPlaylist[doctorLoopIndex];
+  if(item) showDoctorLed(item);
+});
+doctorLoopAudio.addEventListener("pause", () => {
+  if(radioStream.paused) setNowPlayingVisible(false);
+});
+function refreshDoctorLoopData(){
+  const info = getSelectedDoctorInfo();
+  const doctorChanged = info.doctorId !== doctorLoopDoctorId;
+
+  if(doctorChanged){
+    doctorLoopAudio.pause();
+    doctorLoopAudio.removeAttribute("src");
+    doctorLoopAudio.load();
+    doctorLoopIndex = 0;
+    doctorLoopWasPlaying = false;
+  }
+
+  doctorLoopDoctorId = info.doctorId;
+  doctorLoopState = info.state;
+  doctorLoopPlaylist = getDoctorPlaylist(info.doctorId);
+
+  if(doctorLoopIndex >= doctorLoopPlaylist.length){
+    doctorLoopIndex = 0;
+  }
+
+  if(info.doctorId && info.stationIndex > 0){
+    selected = info.stationIndex;
+    rotation = selected * (360 / stations.length);
+    render();
+
+    if(!radioStream.paused){
+      stopRadioStream();
+    }
+  }else if(!info.doctorId){
+    selected = 0;
+    rotation = 0;
+    render();
+  }
+
+  if(doctorChanged){
+    restoreCentovaLed();
+    setDialerPlayingState(false);
+  }
+}
+window.addEventListener("radio4:doctorchange", refreshDoctorLoopData);
+window.addEventListener("radio4:ondemandready", refreshDoctorLoopData);
+
 let stationSwitchToken=0;
+let doctorStationSwitchToken=0;
+let doctorPageTuneShouldResume=false;
 async function switchStreamIfPlaying(){
   if(radioStream.paused)return;
   const token=++stationSwitchToken;
@@ -1793,6 +2047,50 @@ async function switchStreamIfPlaying(){
 }
 function onStationChanged(){
   playTuningClick();
+
+  // Carry the original playback state across rapid tuner movements.
+  const shouldResume = doctorPageTuneShouldResume ||
+    !radioStream.paused || !doctorLoopAudio.paused;
+  doctorPageTuneShouldResume = shouldResume;
+
+  const tuningToken = ++doctorStationSwitchToken;
+
+  if(isSelectedDoctorStation()){
+    if(!radioStream.paused) stopRadioStream();
+    if(!doctorLoopAudio.paused) pauseDoctorLoop();
+
+    setDialerPlayingState(false);
+
+    if(shouldResume){
+      window.setTimeout(() => {
+        if(tuningToken !== doctorStationSwitchToken || !isSelectedDoctorStation()) return;
+        doctorPageTuneShouldResume = false;
+        startDoctorLoop(doctorLoopWasPlaying);
+      }, 1000);
+    }
+    return;
+  }
+
+  const info = getSelectedDoctorInfo();
+
+  if(info.doctorId){
+    if(!doctorLoopAudio.paused) pauseDoctorLoop();
+    if(!radioStream.paused) stopRadioStream();
+
+    restoreCentovaLed();
+    setDialerPlayingState(false);
+
+    if(shouldResume){
+      window.setTimeout(() => {
+        if(tuningToken !== doctorStationSwitchToken || isSelectedDoctorStation()) return;
+        doctorPageTuneShouldResume = false;
+        startRadioStream();
+      }, 1000);
+    }
+    return;
+  }
+
+  // Main website tuning behaviour remains unchanged.
   switchStreamIfPlaying();
 }
 
@@ -1833,9 +2131,37 @@ function stopRadioStream(){
   playButton.setAttribute('aria-label','Play radio');
   status.textContent='PLAYBACK STOPPED';
 }
+
+function stopAllRadioAudio(){
+  doctorLoopAudio.pause();
+  doctorLoopAudio.removeAttribute("src");
+  doctorLoopAudio.load();
+  doctorLoopWasPlaying = false;
+  doctorLoopIndex = 0;
+  stopRadioStream();
+  restoreCentovaLed();
+  setDialerPlayingState(false);
+  setNowPlayingVisible(false);
+}
+
+window.addEventListener("pagehide", stopAllRadioAudio);
 playButton.onclick=()=>{
-  if(!radioStream.paused){stopRadioStream();}
-  else{startRadioStream();}
+  if(isSelectedDoctorStation()){
+    if(!doctorLoopAudio.paused){
+      stopDoctorLoop();
+    }else{
+      if(!radioStream.paused) stopRadioStream();
+      startDoctorLoop(doctorLoopWasPlaying);
+    }
+    return;
+  }
+
+  if(!radioStream.paused){
+    stopRadioStream();
+  }else{
+    stopDoctorLoop();
+    startRadioStream();
+  }
 };
 render();
 
@@ -1865,6 +2191,15 @@ window.setTimeout(()=>{
   if(tunerHint) tunerHint.classList.add('is-visible');
   window.setTimeout(()=>{if(tunerHint) tunerHint.remove();},3100);
 },12700);
+</script>
+<script>
+window.centovacast = window.centovacast || {};
+window.centovacast.options = window.centovacast.options || {};
+window.centovacast.options.streaminfo = Object.assign(
+  {},
+  window.centovacast.options.streaminfo || {},
+  {poll_frequency: 10000, poll_limit: 0}
+);
 </script>
 <script src="https://cast4.asurahosting.com/system/streaminfo.js"></script>
 
