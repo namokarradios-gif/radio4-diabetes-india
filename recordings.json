@@ -109,6 +109,14 @@
       "state": "Gujarat"
     },
     {
+      "remote_name": "Talk by Dr Ebn on World Diabetes Day Message to Indians.mp3",
+      "completed_at": "2026-11-25T18:51:14+00:00",
+      "doctor_name": "Dr. Ebn",
+      "qualification": "Kj",
+      "registration_number": "2788",
+      "state": "Assam"
+    },
+    {
       "remote_name": "Talk by Dr G N SHIVA SHANKAR on World Diabetes Day Message to Indians.mp3",
       "completed_at": "2026-11-14T04:02:44+00:00",
       "doctor_name": "Dr. G.N.SHIVA SHANKAR",
@@ -251,30 +259,6 @@
       "qualification": "MS",
       "registration_number": "26220",
       "state": "Karnataka"
-    },
-    {
-      "remote_name": "Talk by Dr test 2 on World Diabetes Day Message to Indians.mp3",
-      "completed_at": "2026-11-25T16:35:24+00:00",
-      "doctor_name": "Dr. test 2",
-      "qualification": "Test",
-      "registration_number": "3333",
-      "state": "Maharashtra"
-    },
-    {
-      "remote_name": "Talk by Dr test 3 on Blood Sugar Monitoring.mp3",
-      "completed_at": "2026-11-25T16:37:36+00:00",
-      "doctor_name": "Dr. test 3",
-      "qualification": "Test",
-      "registration_number": "666",
-      "state": "Karnataka"
-    },
-    {
-      "remote_name": "Talk by Dr test on Diabetes.mp3",
-      "completed_at": "2026-11-25T16:35:24+00:00",
-      "doctor_name": "Dr. test",
-      "qualification": "Test",
-      "registration_number": "44",
-      "state": "Maharashtra"
     }
   ]
 }
