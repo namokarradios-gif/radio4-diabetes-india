@@ -261,6 +261,14 @@
       "state": "Maharashtra"
     },
     {
+      "remote_name": "Talk by Dr test 3 on Blood Sugar Monitoring.mp3",
+      "completed_at": "2026-11-25T16:37:36+00:00",
+      "doctor_name": "Dr. test 3",
+      "qualification": "Test",
+      "registration_number": "666",
+      "state": "Karnataka"
+    },
+    {
       "remote_name": "Talk by Dr test on Diabetes.mp3",
       "completed_at": "2026-11-25T16:35:24+00:00",
       "doctor_name": "Dr. test",
