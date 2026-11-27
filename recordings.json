@@ -221,22 +221,6 @@
       "state": "Chhattisgarh"
     },
     {
-      "remote_name": "Talk by Dr SANDEEP MOHE on Diabetes.mp3",
-      "completed_at": "2026-11-26T08:24:27+00:00",
-      "doctor_name": "Dr. SANDEEP MOHE",
-      "qualification": "ff",
-      "registration_number": "3333",
-      "state": "Maharashtra"
-    },
-    {
-      "remote_name": "Talk by Dr SANDEEP MOHE on World Diabetes Day Message to Indians.mp3",
-      "completed_at": "2026-11-27T06:46:37+00:00",
-      "doctor_name": "Dr. SANDEEP MOHE",
-      "qualification": "md",
-      "registration_number": "12",
-      "state": "Maharashtra"
-    },
-    {
       "remote_name": "Talk by Dr Seema Bagri on World Diabetes Day Message to Indians.mp3",
       "completed_at": "2026-11-14T13:26:35+00:00",
       "doctor_name": "Dr. Seema Bagri",
@@ -275,14 +259,6 @@
       "qualification": "MS",
       "registration_number": "26220",
       "state": "Karnataka"
-    },
-    {
-      "remote_name": "Talk by Dr WSWSW on World Diabetes Day Message to Indians.mp3",
-      "completed_at": "2026-11-27T17:40:08+00:00",
-      "doctor_name": "Dr. WSWSW",
-      "qualification": "WSW",
-      "registration_number": "3333",
-      "state": "Kerala"
     }
   ]
 }
