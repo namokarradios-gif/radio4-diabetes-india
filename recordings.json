@@ -1,6 +1,14 @@
 {
   "recordings": [
     {
+      "remote_name": "Talk by Dr 2w on World Diabetes Day Message to Indians.mp3",
+      "completed_at": "2026-11-28T07:09:12+00:00",
+      "doctor_name": "Dr. 2w",
+      "qualification": "w2w",
+      "registration_number": "3333",
+      "state": "Kerala"
+    },
+    {
       "remote_name": "Talk by Dr AKASHKUMAR SINGH on World Diabetes Day Message to Indians 20261114 092856.mp3",
       "completed_at": "2026-11-14T04:02:44+00:00",
       "doctor_name": "Dr. AKASHKUMAR SINGH",
